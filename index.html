@@ -472,10 +472,20 @@ $("#cloudSave").addEventListener("click",async()=>{
 });
 function updateCloudDot(){ $("#cloudDot").classList.toggle("on",!!cloud.on); }
 
+/* 앱으로 돌아오거나 다시 켤 때마다 자동으로 최신 불러오기 */
+let lastSync=0;
+async function autoSync(force){
+  if(!cloud.on) return;
+  const t=Date.now(); if(!force && t-lastSync<8000) return; lastSync=t;
+  try{ await cloudPull(); render(); }catch(e){}
+}
+document.addEventListener("visibilitychange",()=>{ if(!document.hidden) autoSync(); });
+window.addEventListener("focus",()=>autoSync());
+
 /* init — 자동 시드 없음(데이터는 클라우드/직접입력) */
 function init(){
   loadCloudCfg(); loadLocal(); updateCloudDot();
-  if(cloud.on){ cloudPull().then(render).catch(()=>{}); }
+  if(cloud.on){ autoSync(true); }
   render();
 }
 init();
