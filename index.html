@@ -259,6 +259,10 @@ async function cloudPull(){
     if(ex){ Object.assign(ex,rec,{id:ex.id,remote_id:row.id}); }
     else { state.data.push(Object.assign(rec,{id:uid(),remote_id:row.id})); }
   });
+  // 서버에서 삭제된 항목은 이 기기에서도 제거 (예전 찌꺼기 자동청소).
+  // remote_id가 있는데 서버 목록에 없으면 = 삭제된 것. 아직 안 올린(remote_id 없는) 새 항목은 유지.
+  const serverIds=new Set(rows.map(x=>x.id));
+  state.data=state.data.filter(d=>!d.remote_id || serverIds.has(d.remote_id));
   saveLocal();
 }
 async function cloudPush(rec){
