@@ -3,89 +3,122 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
-<meta name="theme-color" content="#0f172a" />
+<meta name="theme-color" content="#0b1220" />
 <title>이안 상담DB · 계약관리</title>
 <style>
   :root{
-    --bg:#0f172a; --panel:#1e293b; --panel2:#273449; --line:#334155;
-    --txt:#e2e8f0; --muted:#94a3b8; --accent:#38bdf8; --accent2:#0ea5e9;
-    --ok:#22c55e; --warn:#f59e0b; --danger:#ef4444; --purple:#a855f7; --blue:#3b82f6;
-    --radius:14px;
+    --bg:#0b1220; --bg2:#0f1a2e; --panel:#16233c; --panel2:#1f3050; --line:#2b3d5e;
+    --txt:#eef4ff; --muted:#93a4c4; --dim:#6b7c9c;
+    --accent:#4dabf7; --accent2:#1c7ed6;
+    --ok:#2fbf71; --warn:#f0a020; --danger:#ff5c5c; --gold:#ffcf5c;
+    --purple:#b085f5; --blue:#5b9bff;
   }
   *{box-sizing:border-box}
   html,body{margin:0;padding:0}
   body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Malgun Gothic",sans-serif;
-    background:var(--bg); color:var(--txt); font-size:15px; -webkit-text-size-adjust:100%; padding-bottom:80px;}
-  header{position:sticky;top:0;z-index:30;background:rgba(15,23,42,.92);backdrop-filter:blur(8px);
-    border-bottom:1px solid var(--line);padding:10px 14px;}
-  .brand{display:flex;align-items:center;gap:8px;justify-content:space-between}
-  .brand h1{font-size:17px;margin:0;font-weight:800;letter-spacing:-.3px}
+    background:linear-gradient(180deg,#0b1220,#0d1526 60%); color:var(--txt); font-size:15px;
+    -webkit-text-size-adjust:100%; padding-bottom:90px; line-height:1.45;}
+  header{position:sticky;top:0;z-index:30;background:rgba(11,18,32,.94);backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);padding:11px 14px 0;}
+  .brand{display:flex;align-items:center;gap:10px;justify-content:space-between}
+  .brand .l{display:flex;align-items:baseline;gap:8px}
+  .brand h1{font-size:18px;margin:0;font-weight:800;letter-spacing:-.4px}
   .brand h1 span{color:var(--accent)}
-  .cloud-dot{width:9px;height:9px;border-radius:50%;background:var(--danger);display:inline-block;margin-right:5px;vertical-align:middle}
-  .cloud-dot.on{background:var(--ok)}
+  .brand .sub{font-size:12px;color:var(--dim)}
+  .hbtns{display:flex;gap:6px}
   .btn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);border-radius:10px;
-    padding:8px 12px;font-size:14px;cursor:pointer;font-weight:600}
+    padding:8px 12px;font-size:14px;cursor:pointer;font-weight:600;white-space:nowrap}
   .btn:active{transform:scale(.97)}
-  .btn.primary{background:var(--accent2);border-color:var(--accent2);color:#00131f}
+  .btn.primary{background:var(--accent2);border-color:var(--accent2);color:#fff}
   .btn.ghost{background:transparent}
-  .btn.sm{padding:5px 9px;font-size:13px}
+  .btn.sm{padding:6px 10px;font-size:13px}
   .btn.danger{color:#fff;background:var(--danger);border-color:var(--danger)}
-  .tabs{display:flex;gap:6px;margin-top:10px}
-  .tab{flex:1;text-align:center;padding:9px;border-radius:10px;background:var(--panel);border:1px solid var(--line);
+  .cloud-dot{width:8px;height:8px;border-radius:50%;background:var(--danger);display:inline-block;margin-right:5px;vertical-align:middle}
+  .cloud-dot.on{background:var(--ok);box-shadow:0 0 6px var(--ok)}
+  /* stat strip */
+  .statstrip{display:flex;gap:8px;margin:11px 0 10px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .st{flex:1;min-width:82px;background:linear-gradient(180deg,var(--panel),var(--bg2));border:1px solid var(--line);
+    border-radius:12px;padding:9px 12px}
+  .st .n{font-size:19px;font-weight:800;letter-spacing:-.3px}
+  .st .n.gold{color:var(--gold)} .st .n.ok{color:var(--ok)}
+  .st .l{font-size:11px;color:var(--muted);margin-top:1px}
+  .tabs{display:flex;gap:6px;padding-bottom:11px}
+  .tab{flex:1;text-align:center;padding:10px;border-radius:11px;background:var(--panel);border:1px solid var(--line);
     font-weight:700;cursor:pointer;color:var(--muted);font-size:14px}
-  .tab.active{background:var(--accent2);color:#00131f;border-color:var(--accent2)}
-  .wrap{padding:12px 14px;max-width:900px;margin:0 auto}
-  .quick{display:flex;gap:8px;margin-bottom:12px}
+  .tab.active{background:var(--accent2);color:#fff;border-color:var(--accent2)}
+  .wrap{padding:12px 14px;max-width:920px;margin:0 auto}
+  /* followup alert */
+  .alertbox{background:linear-gradient(180deg,#2a1520,#1a1018);border:1px solid #5a2740;border-radius:14px;
+    padding:12px 13px;margin-bottom:13px}
+  .alertbox h3{margin:0 0 9px;font-size:14px;color:#ff9db0}
+  .al-item{display:flex;align-items:center;gap:8px;padding:7px 0;border-top:1px solid rgba(255,255,255,.06)}
+  .al-item:first-of-type{border-top:none}
+  .al-badge{font-size:11px;font-weight:800;padding:3px 8px;border-radius:999px;background:#5a2740;color:#ffb3c1;white-space:nowrap}
+  .al-badge.over{background:var(--danger);color:#fff}
+  .al-name{font-weight:700}
+  .al-item a{margin-left:auto;color:var(--accent);text-decoration:none;font-weight:600;font-size:14px}
+  /* quick */
+  .quick{display:flex;gap:8px;margin-bottom:11px}
   .quick input{flex:1;background:var(--panel);border:1px solid var(--line);border-radius:12px;
-    padding:12px 14px;color:var(--txt);font-size:15px}
-  .quick input::placeholder{color:#64748b}
-  .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
-  .toolbar input.search{flex:1;min-width:140px;background:var(--panel);border:1px solid var(--line);
-    border-radius:10px;padding:9px 12px;color:var(--txt);font-size:14px}
-  select{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:9px 10px;color:var(--txt);font-size:14px}
-  .stats{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
-  .stat{flex:1;min-width:90px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
-  .stat .n{font-size:20px;font-weight:800}
-  .stat .l{font-size:12px;color:var(--muted);margin-top:2px}
-  .list{display:flex;flex-direction:column;gap:9px}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:12px 13px;position:relative}
-  .card .top{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-  .card .name{font-weight:800;font-size:16px}
-  .card .phone{color:var(--accent);font-size:14px;text-decoration:none}
-  .card .meta{color:var(--muted);font-size:13px;margin-top:5px;line-height:1.5}
-  .card .meta b{color:var(--txt);font-weight:600}
-  .card .note{margin-top:6px;font-size:13px;color:#cbd5e1;background:var(--panel2);border-radius:8px;padding:6px 9px;white-space:pre-wrap}
-  .badge{font-size:11px;font-weight:800;padding:3px 8px;border-radius:999px;white-space:nowrap}
-  .b-상담예정{background:#334155;color:#cbd5e1}
-  .b-1차상담{background:#1e3a5f;color:#7dd3fc}
-  .b-2차상담{background:#3b2f5e;color:#c4b5fd}
-  .b-계약{background:#14532d;color:#86efac}
-  .b-종료{background:#1f2937;color:#6b7280}
-  .tag{font-size:11px;font-weight:700;padding:3px 8px;border-radius:6px;background:var(--panel2);color:var(--muted)}
-  .tag.rps{background:#3b2f10;color:#fcd34d}
-  .tag.임대{background:#0e2a3a;color:#7dd3fc}
-  .tag.현금{background:#14331f;color:#86efac}
-  .amt{font-weight:800;color:#fcd34d;font-size:14px}
-  .row-actions{display:flex;gap:6px;margin-top:9px}
-  .empty{text-align:center;color:var(--muted);padding:40px 10px}
+    padding:13px 14px;color:var(--txt);font-size:15px}
+  .quick input::placeholder{color:var(--dim)}
+  /* chips */
+  .chips{display:flex;gap:7px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:3px;margin-bottom:10px}
+  .chip{white-space:nowrap;padding:8px 13px;border-radius:999px;background:var(--panel);border:1px solid var(--line);
+    color:var(--muted);font-weight:700;font-size:13px;cursor:pointer}
+  .chip .c{opacity:.7;margin-left:4px;font-weight:800}
+  .chip.active{background:#13233f;border-color:var(--accent);color:var(--accent)}
+  .toolbar{display:flex;gap:8px;margin-bottom:12px}
+  .toolbar input.search{flex:1;background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:10px 13px;color:var(--txt);font-size:14px}
+  select{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:10px;color:var(--txt);font-size:14px}
+  /* list */
+  .list{display:flex;flex-direction:column;gap:10px}
+  .card{background:linear-gradient(180deg,var(--panel),#13203a);border:1px solid var(--line);border-radius:15px;
+    padding:13px 14px;position:relative}
+  .card.contract{border-left:3px solid var(--ok)}
+  .card .top{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+  .card .name{font-weight:800;font-size:17px;letter-spacing:-.3px}
+  .card .phone{color:var(--accent);font-size:15px;text-decoration:none;font-weight:600}
+  .badge{font-size:11px;font-weight:800;padding:4px 9px;border-radius:999px;white-space:nowrap}
+  .b-상담예정{background:#33445e;color:#cdd9ec}
+  .b-1차상담{background:#123a5a;color:#7cc4ff}
+  .b-2차상담{background:#3a2c5e;color:#c9b3ff}
+  .b-계약{background:#123f2b;color:#7fe0a8}
+  .b-종료{background:#232f42;color:#7c8aa3}
+  .card .addr{color:var(--muted);font-size:13.5px;margin-top:7px;display:flex;gap:5px}
+  .card .addr .pin{color:var(--danger);flex:none}
+  .tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;align-items:center}
+  .tag{font-size:12px;font-weight:700;padding:4px 9px;border-radius:7px;background:var(--panel2);color:var(--muted)}
+  .tag.kw{background:#12243f;color:#9cc7ff}
+  .tag.rps{background:#3a3110;color:var(--gold)}
+  .tag.임대{background:#0e3040;color:#7fd6ff}
+  .tag.현금{background:#123320;color:#87e6a6}
+  .tag.who{background:#241a3a;color:#c3aef5}
+  .tag.area{background:#2a2620;color:#e6c99a}
+  .amt{font-weight:800;color:var(--gold);font-size:15px;margin-left:auto}
+  .cdate{font-size:12px;color:var(--ok);font-weight:700}
+  .special{margin-top:8px;font-size:13px;color:#ffd0a8;background:#2a1e12;border-radius:9px;padding:7px 10px}
+  .note{margin-top:7px;font-size:13px;color:#cfdbf0;background:#0e1a30;border-radius:9px;padding:8px 10px;white-space:pre-wrap}
+  .row-actions{display:flex;gap:7px;margin-top:10px}
+  .empty{text-align:center;color:var(--muted);padding:44px 10px}
   /* modal */
-  .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:flex-end;justify-content:center;z-index:50}
+  .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.66);display:none;align-items:flex-end;justify-content:center;z-index:50}
   .modal-bg.show{display:flex}
-  .modal{background:var(--panel);width:100%;max-width:560px;border-radius:18px 18px 0 0;padding:16px;max-height:92vh;overflow:auto}
-  @media(min-width:560px){.modal-bg{align-items:center}.modal{border-radius:18px}}
-  .modal h3{margin:0 0 12px}
-  .fgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-  .field{display:flex;flex-direction:column;gap:4px}
+  .modal{background:var(--panel);width:100%;max-width:560px;border-radius:20px 20px 0 0;padding:16px;max-height:93vh;overflow:auto;border:1px solid var(--line);border-bottom:none}
+  @media(min-width:560px){.modal-bg{align-items:center}.modal{border-radius:20px;border-bottom:1px solid var(--line)}}
+  .modal h3{margin:0 0 13px;font-size:17px}
+  .fgrid{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+  .field{display:flex;flex-direction:column;gap:5px}
   .field.full{grid-column:1/-1}
   .field label{font-size:12px;color:var(--muted);font-weight:600}
-  .field input,.field select,.field textarea{background:var(--panel2);border:1px solid var(--line);border-radius:9px;
-    padding:9px 10px;color:var(--txt);font-size:14px;font-family:inherit}
-  .field textarea{min-height:64px;resize:vertical}
-  .modal-actions{display:flex;gap:8px;margin-top:16px}
-  .modal-actions .btn{flex:1;padding:12px}
+  .field input,.field select,.field textarea{background:var(--bg2);border:1px solid var(--line);border-radius:10px;
+    padding:11px 12px;color:var(--txt);font-size:15px;font-family:inherit}
+  .field textarea{min-height:72px;resize:vertical}
+  .modal-actions{display:flex;gap:8px;margin-top:17px}
+  .modal-actions .btn{flex:1;padding:13px}
   .hint{font-size:12px;color:var(--muted);line-height:1.6}
-  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#0b1220;border:1px solid var(--line);
-    color:var(--txt);padding:11px 18px;border-radius:12px;z-index:80;opacity:0;transition:.25s;pointer-events:none;font-weight:600;font-size:14px}
+  .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#06101f;border:1px solid var(--line);
+    color:var(--txt);padding:12px 20px;border-radius:12px;z-index:80;opacity:0;transition:.25s;pointer-events:none;font-weight:700;font-size:14px}
   .toast.show{opacity:1}
   code{background:var(--panel2);padding:2px 5px;border-radius:5px;font-size:12px}
 </style>
@@ -93,12 +126,13 @@
 <body>
 <header>
   <div class="brand">
-    <h1>이안 <span>상담DB</span></h1>
-    <div>
-      <button class="btn sm ghost" id="btnCloud" title="클라우드 동기화 설정"><span class="cloud-dot" id="cloudDot"></span>동기화</button>
+    <div class="l"><h1>이안 <span>상담DB</span></h1><span class="sub">이안태양광</span></div>
+    <div class="hbtns">
+      <button class="btn sm ghost" id="btnCloud"><span class="cloud-dot" id="cloudDot"></span>동기화</button>
       <button class="btn sm ghost" id="btnMenu">⋯</button>
     </div>
   </div>
+  <div class="statstrip" id="stats"></div>
   <div class="tabs">
     <div class="tab active" data-view="db">📋 상담DB</div>
     <div class="tab" data-view="contract">✅ 계약현황</div>
@@ -106,25 +140,19 @@
 </header>
 
 <div class="wrap">
+  <div class="alertbox" id="alertbox" style="display:none"></div>
+
   <div class="quick">
-    <input id="quickInput" placeholder="빠른입력: 홍길동 01012345678 30kw 임대 상담예정 …" />
+    <input id="quickInput" placeholder="빠른입력: 홍길동 01012345678 대전 30kw 임대 협력 …" />
     <button class="btn primary" id="quickAdd">추가</button>
   </div>
 
-  <div class="stats" id="stats"></div>
+  <div class="chips" id="chips"></div>
 
   <div class="toolbar">
-    <input class="search" id="search" placeholder="🔍 이름·전화·주소·메모 검색" />
-    <select id="fStage">
-      <option value="">단계 전체</option>
-      <option>상담예정</option><option>1차상담</option><option>2차상담</option><option>계약</option><option>종료</option>
-    </select>
-    <select id="fType">
-      <option value="">유형 전체</option>
-      <option>임대</option><option>RPS</option><option>현금</option>
-    </select>
+    <input class="search" id="search" placeholder="🔍 이름·전화·주소·메모·누구디비 검색" />
     <select id="sort">
-      <option value="updated">최근수정순</option>
+      <option value="updated">최근순</option>
       <option value="name">이름순</option>
       <option value="amount">금액순</option>
     </select>
@@ -133,28 +161,28 @@
   <div class="list" id="list"></div>
 </div>
 
-<!-- 편집 모달 -->
+<!-- 편집 -->
 <div class="modal-bg" id="editBg">
   <div class="modal">
     <h3 id="editTitle">상담 추가</h3>
     <div class="fgrid">
       <div class="field"><label>이름</label><input id="f_name"/></div>
       <div class="field"><label>연락처</label><input id="f_phone" inputmode="numeric"/></div>
-      <div class="field"><label>단계</label>
+      <div class="field"><label>진행단계</label>
         <select id="f_stage"><option>상담예정</option><option>1차상담</option><option>2차상담</option><option>계약</option><option>종료</option></select>
       </div>
+      <div class="field"><label>누구디비</label><input id="f_source" placeholder="자체 민경민 / 협력 / 조재현"/></div>
+      <div class="field"><label>용량(kW)</label><input id="f_kw" inputmode="decimal"/></div>
       <div class="field"><label>유형</label>
         <select id="f_type"><option value="">-</option><option>임대</option><option>RPS</option><option>현금</option></select>
       </div>
-      <div class="field"><label>용량(kW)</label><input id="f_kw" inputmode="decimal"/></div>
-      <div class="field"><label>계약금액</label><input id="f_amount" placeholder="예: 6,750만 / 2.2억"/></div>
+      <div class="field"><label>계약금액</label><input id="f_amount" placeholder="6,750만 / 2.2억"/></div>
+      <div class="field"><label>평수/면적</label><input id="f_area" placeholder="250평 / 60평 미만"/></div>
       <div class="field full"><label>주소</label><input id="f_addr"/></div>
       <div class="field"><label>영업담당</label><input id="f_rep"/></div>
-      <div class="field"><label>DB출처</label><input id="f_source" placeholder="예: 자체 / 민경민 DB"/></div>
       <div class="field"><label>다음연락일</label><input id="f_followup" type="date"/></div>
-      <div class="field"><label>평수/면적</label><input id="f_area"/></div>
-      <div class="field full"><label>특이사항</label><input id="f_special" placeholder="예: 목조 / 평수작음 / 연락안됨"/></div>
-      <div class="field full"><label>메모</label><textarea id="f_note"></textarea></div>
+      <div class="field full"><label>특이사항</label><input id="f_special"/></div>
+      <div class="field full"><label>메모 (비고)</label><textarea id="f_note"></textarea></div>
     </div>
     <div class="modal-actions">
       <button class="btn danger" id="btnDelete" style="flex:0 0 auto">삭제</button>
@@ -164,30 +192,31 @@
   </div>
 </div>
 
-<!-- 메뉴 모달 -->
+<!-- 메뉴 -->
 <div class="modal-bg" id="menuBg">
   <div class="modal">
     <h3>메뉴 / 백업</h3>
     <div style="display:flex;flex-direction:column;gap:9px">
+      <button class="btn" id="mSync">🔄 지금 클라우드에서 새로고침</button>
       <button class="btn" id="mExport">💾 JSON 백업 내보내기</button>
       <button class="btn" id="mImport">📂 JSON 불러오기 (병합)</button>
       <input type="file" id="fileImport" accept="application/json" style="display:none"/>
       <button class="btn" id="mCsv">📊 CSV 내보내기 (엑셀)</button>
-      <button class="btn danger" id="mReset">🗑 전체 초기화</button>
+      <button class="btn danger" id="mReset">🗑 이 기기 목록 비우기</button>
     </div>
-    <p class="hint" style="margin-top:14px">데이터는 이 브라우저(localStorage)에 저장됩니다. 클라우드 동기화를 켜면 PC·폰이 같은 데이터를 봅니다. 정기적으로 JSON 백업을 권장합니다.</p>
+    <p class="hint" style="margin-top:14px">데이터는 이 브라우저 + (연결 시) 클라우드에 저장됩니다. "비우기"는 이 기기 화면만 지우며, 다시 동기화하면 클라우드에서 내려받습니다.</p>
     <div class="modal-actions"><button class="btn ghost" id="menuClose" style="flex:1">닫기</button></div>
   </div>
 </div>
 
-<!-- 클라우드 설정 모달 -->
+<!-- 클라우드 -->
 <div class="modal-bg" id="cloudBg">
   <div class="modal">
     <h3>☁ 클라우드 동기화 (Supabase)</h3>
-    <p class="hint">PC와 폰에서 <b>같은 데이터</b>를 보려면 여기에 Supabase 정보를 입력하세요. 봇이 쓰던 Supabase 프로젝트를 재사용해도, 이 앱은 <b>봇과 분리된 전용 테이블</b> <code>sangdam_db</code> 만 사용합니다 (봇 데이터와 안 섞임).</p>
+    <p class="hint">PC·폰에서 <b>같은 데이터</b>를 보려면 Supabase 정보를 입력하세요. 이 앱은 봇과 분리된 전용 테이블 <code>sangdam_db</code> 만 사용합니다.</p>
     <div class="fgrid" style="margin-top:10px">
       <div class="field full"><label>Supabase URL</label><input id="c_url" placeholder="https://xxxx.supabase.co"/></div>
-      <div class="field full"><label>API Key (anon 권장)</label><input id="c_key" placeholder="eyJ..."/></div>
+      <div class="field full"><label>API Key (anon)</label><input id="c_key" placeholder="eyJ..."/></div>
     </div>
     <div class="modal-actions">
       <button class="btn ghost" id="cloudOff">동기화 끄기</button>
@@ -206,28 +235,27 @@ const STAGES=["상담예정","1차상담","2차상담","계약","종료"];
 const $=s=>document.querySelector(s);
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const now=()=>new Date().toISOString();
+const today=()=>new Date().toISOString().slice(0,10);
 
-let state={ view:"db", data:[], editingId:null };
+let state={ view:"db", data:[], editingId:null, stageFilter:"" };
 let cloud={ url:"", key:"", on:false };
 
-/* ---------- storage ---------- */
+/* storage */
 function loadLocal(){ try{state.data=JSON.parse(localStorage.getItem(LS_KEY)||"[]")}catch(e){state.data=[]} }
 function saveLocal(){ localStorage.setItem(LS_KEY, JSON.stringify(state.data)); }
 function loadCloudCfg(){ try{cloud=Object.assign(cloud,JSON.parse(localStorage.getItem(LS_CLOUD)||"{}"))}catch(e){} }
 function saveCloudCfg(){ localStorage.setItem(LS_CLOUD, JSON.stringify(cloud)); }
 
-/* ---------- Supabase REST ---------- */
+/* Supabase REST — 전용 테이블 sangdam_db */
 function sbHeaders(){ return {apikey:cloud.key,Authorization:"Bearer "+cloud.key,"Content-Type":"application/json"}; }
 async function cloudPull(){
   if(!cloud.on) return;
   const r=await fetch(`${cloud.url}/rest/v1/sangdam_db?select=*&order=updated_at.desc`,{headers:sbHeaders()});
   if(!r.ok) throw new Error("pull "+r.status);
   const rows=await r.json();
-  // merge by remote id -> map to local records
   const byRemote={}; state.data.forEach(d=>{ if(d.remote_id) byRemote[d.remote_id]=d; });
   rows.forEach(row=>{
-    const rec=fromRemote(row);
-    const ex=byRemote[row.id];
+    const rec=fromRemote(row); const ex=byRemote[row.id];
     if(ex){ Object.assign(ex,rec,{id:ex.id,remote_id:row.id}); }
     else { state.data.push(Object.assign(rec,{id:uid(),remote_id:row.id})); }
   });
@@ -250,75 +278,60 @@ async function cloudDelete(rec){
   try{ await fetch(`${cloud.url}/rest/v1/sangdam_db?id=eq.${rec.remote_id}`,{method:"DELETE",headers:sbHeaders()}); }catch(e){}
 }
 const REMOTE_FIELDS=["name","phone","addr","area","kw","type","amount","stage","rep","source","note","special","followup","created_at","updated_at"];
-function toRemote(r){ const o={}; REMOTE_FIELDS.forEach(f=>{ let k=f==="addr"?"addr":f; o[f]=r[mapLocal(f)]||null; }); return o; }
-function mapLocal(f){ return ({addr:"addr",created_at:"created_at",updated_at:"updated_at"})[f]||f; }
+function toRemote(r){ const o={}; REMOTE_FIELDS.forEach(f=>{ o[f]=r[f]||null; }); return o; }
 function fromRemote(row){
-  return { name:row.name||"", phone:row.phone||"", addr:row.addr||"", area:row.area||"", kw:row.kw||"",
-    type:row.type||"", amount:row.amount||"", stage:row.stage||"상담예정", rep:row.rep||"", source:row.source||"",
-    note:row.note||"", special:row.special||"", followup:row.followup||"",
-    created_at:row.created_at||now(), updated_at:row.updated_at||now() };
+  const o={}; REMOTE_FIELDS.forEach(f=>o[f]=row[f]||"");
+  if(!o.stage) o.stage="상담예정";
+  if(!o.created_at) o.created_at=now(); if(!o.updated_at) o.updated_at=now();
+  return o;
 }
 
-/* ---------- quick parse (규칙 기반, AI 불필요) ---------- */
+/* quick parse */
 function parseQuick(text){
-  const rec={ name:"",phone:"",kw:"",type:"",amount:"",stage:"",addr:"",source:"",special:"",note:"" };
+  const rec={name:"",phone:"",kw:"",type:"",amount:"",stage:"",addr:"",source:"",area:"",special:"",note:""};
   let t=" "+text.trim()+" ";
-  // 전화
   const ph=t.match(/01[016789][\s\-]?\d{3,4}[\s\-]?\d{4}/);
-  if(ph){ rec.phone=ph[0].replace(/[\s\-]/g,""); t=t.replace(ph[0]," "); }
-  // 용량 kw
+  if(ph){ rec.phone=ph[0].replace(/\s/g,""); t=t.replace(ph[0]," "); }
   const kw=t.match(/(\d+(?:\.\d+)?)\s*(?:kw|kW|KW|키로|킬로|㎾)/);
   if(kw){ rec.kw=kw[1]; t=t.replace(kw[0]," "); }
-  // 금액
   const eok=t.match(/(\d+(?:\.\d+)?)\s*억/); const man=t.match(/([\d,]+)\s*만/);
   if(eok||man){ rec.amount=(eok?eok[1]+"억":"")+(man?man[1].replace(/,/g,"")+"만":""); if(eok)t=t.replace(eok[0]," "); if(man)t=t.replace(man[0]," "); }
-  // 유형
+  const area=t.match(/(\d+\s*[~-]\s*\d+\s*평|\d+\s*평(?:\s*미만|\s*이상)?|\d+\s*㎡)/);
+  if(area){ rec.area=area[0].replace(/\s/g,""); t=t.replace(area[0]," "); }
   if(/임대/.test(t)){rec.type="임대";t=t.replace(/임대/g," ");}
   else if(/rps/i.test(t)){rec.type="RPS";t=t.replace(/rps/ig," ");}
   else if(/현금|자부담/.test(t)){rec.type="현금";t=t.replace(/현금|자부담/g," ");}
-  // 단계
+  if(/민경민/.test(t)){rec.source="자체 민경민";t=t.replace(/자체\s*민경민|민경민/g," ");}
+  else if(/협력/.test(t)){rec.source="협력";t=t.replace(/협력/g," ");}
+  else if(/조재현|조재/.test(t)){rec.source="조재현";t=t.replace(/조재현|조재/g," ");}
+  else if(/자체/.test(t)){rec.source="자체";t=t.replace(/자체/g," ");}
   for(const s of STAGES){ if(t.includes(s)){rec.stage=s;t=t.replace(s," ");break;} }
-  // 특이사항 키워드
-  const spKeys=["목조","평수작음","연락안됨","부재","재통화","경사지붕","무허가","가건물"];
-  spKeys.forEach(k=>{ if(t.includes(k)){ rec.special=(rec.special?rec.special+" ":"")+k; t=t.replace(new RegExp(k,"g")," "); } });
-  // 이름 = 첫 한글 토큰(2~4자)
-  const nm=t.trim().match(/[가-힣]{2,4}/);
+  ["목조","평수작음","연락안됨","부재","선로없음","불법건축물"].forEach(k=>{ if(t.includes(k)){ rec.special=(rec.special?rec.special+" ":"")+k; t=t.replace(new RegExp(k,"g")," "); } });
+  const nm=t.trim().match(/[가-힣]{2,4}(?:님|소장)?/);
   if(nm){ rec.name=nm[0]; t=t.replace(nm[0]," "); }
-  // 나머지는 메모
-  const rest=t.replace(/\s+/g," ").trim();
-  if(rest) rec.note=rest;
-  if(!rec.stage) rec.stage = rec.type==="RPS"||rec.type==="임대"||rec.type==="현금" ? "계약" : "상담예정";
+  const rest=t.replace(/\s+/g," ").trim(); if(rest) rec.note=rest;
+  if(!rec.stage) rec.stage = ["임대","RPS","현금"].includes(rec.type) ? "계약" : "상담예정";
   return rec;
 }
 
-/* ---------- CRUD ---------- */
-function addRecord(rec){
-  const r=Object.assign({id:uid(),created_at:now(),updated_at:now(),stage:"상담예정"},rec);
-  state.data.unshift(r); saveLocal(); cloudPush(r); return r;
-}
-function updateRecord(id,patch){
-  const r=state.data.find(x=>x.id===id); if(!r)return;
-  Object.assign(r,patch,{updated_at:now()}); saveLocal(); cloudPush(r);
-}
-function deleteRecord(id){
-  const i=state.data.findIndex(x=>x.id===id); if(i<0)return;
-  const r=state.data[i]; state.data.splice(i,1); saveLocal(); cloudDelete(r);
-}
+/* CRUD */
+function addRecord(rec){ const r=Object.assign({id:uid(),created_at:now(),updated_at:now(),stage:"상담예정"},rec); state.data.unshift(r); saveLocal(); cloudPush(r); return r; }
+function updateRecord(id,patch){ const r=state.data.find(x=>x.id===id); if(!r)return; Object.assign(r,patch,{updated_at:now()}); saveLocal(); cloudPush(r); }
+function deleteRecord(id){ const i=state.data.findIndex(x=>x.id===id); if(i<0)return; const r=state.data[i]; state.data.splice(i,1); saveLocal(); cloudDelete(r); }
 
-/* ---------- amount parse for stats ---------- */
-function amtToMan(s){ if(!s)return 0; let m=0; const e=(""+s).match(/(\d+(?:\.\d+)?)\s*억/); const w=(""+s).match(/([\d,]+)\s*만/);
-  if(e)m+=parseFloat(e[1])*10000; if(w)m+=parseFloat(w[1].replace(/,/g,"")); return m; }
-function fmtMan(n){ if(!n)return "-"; if(n>=10000){ const e=n/10000; return (Number.isInteger(e)?e:e.toFixed(1))+"억"; } return n.toLocaleString()+"만"; }
+/* amount */
+function amtToMan(s){ if(!s)return 0; let m=0; const e=(""+s).match(/(\d+(?:\.\d+)?)\s*억/); const w=(""+s).match(/([\d,]+)\s*만/); if(e)m+=parseFloat(e[1])*10000; if(w)m+=parseFloat(w[1].replace(/,/g,"")); return m; }
+function fmtMan(n){ if(!n)return "0"; if(n>=10000){ const e=n/10000; return (Number.isInteger(e)?e:e.toFixed(1))+"억"; } return n.toLocaleString()+"만"; }
+function esc(s){ return (s==null?"":String(s)).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m])); }
+function extractCdate(note){ const m=(note||"").match(/계약일\s*(\d{4}-\d{2}-\d{2})/); return m?m[1]:""; }
 
-/* ---------- render ---------- */
+/* render */
 function currentList(){
   let arr=state.data.slice();
   if(state.view==="contract") arr=arr.filter(r=>r.stage==="계약");
+  if(state.stageFilter) arr=arr.filter(r=>r.stage===state.stageFilter);
   const q=$("#search").value.trim();
-  const fs=$("#fStage").value, ft=$("#fType").value;
-  if(q){ const k=q.toLowerCase(); arr=arr.filter(r=>[r.name,r.phone,r.addr,r.note,r.source,r.special,r.rep].join(" ").toLowerCase().includes(k)); }
-  if(fs) arr=arr.filter(r=>r.stage===fs);
-  if(ft) arr=arr.filter(r=>r.type===ft);
+  if(q){ const k=q.toLowerCase(); arr=arr.filter(r=>[r.name,r.phone,r.addr,r.note,r.source,r.special,r.rep,r.area].join(" ").toLowerCase().includes(k)); }
   const sort=$("#sort").value;
   arr.sort((a,b)=>{
     if(sort==="name") return (a.name||"").localeCompare(b.name||"","ko");
@@ -328,176 +341,136 @@ function currentList(){
   return arr;
 }
 function renderStats(){
-  const d=state.data;
-  const contracts=d.filter(r=>r.stage==="계약");
+  const d=state.data, contracts=d.filter(r=>r.stage==="계약");
   const total=contracts.reduce((s,r)=>s+amtToMan(r.amount),0);
   const cards = state.view==="contract"
-    ? [["계약 건수",contracts.length+"건"],["계약금액 합계",fmtMan(total)],["임대",contracts.filter(r=>r.type==="임대").length+"건"],["RPS",contracts.filter(r=>r.type==="RPS").length+"건"]]
-    : [["전체",d.length+"건"],["상담예정",d.filter(r=>r.stage==="상담예정").length+"건"],["진행중",d.filter(r=>["1차상담","2차상담"].includes(r.stage)).length+"건"],["계약",contracts.length+"건"]];
-  $("#stats").innerHTML=cards.map(c=>`<div class="stat"><div class="n">${c[1]}</div><div class="l">${c[0]}</div></div>`).join("");
+    ? [["계약 건수",contracts.length+"건",""],["계약금액",fmtMan(total),"gold"],["임대",contracts.filter(r=>r.type==="임대").length+"건",""],["RPS",contracts.filter(r=>r.type==="RPS").length+"건",""],["현금",contracts.filter(r=>r.type==="현금").length+"건",""]]
+    : [["전체",d.length+"건",""],["상담예정",d.filter(r=>r.stage==="상담예정").length+"건",""],["진행중",d.filter(r=>["1차상담","2차상담"].includes(r.stage)).length+"건",""],["계약",contracts.length+"건","ok"],["계약금액",fmtMan(total),"gold"]];
+  $("#stats").innerHTML=cards.map(c=>`<div class="st"><div class="n ${c[2]}">${c[1]}</div><div class="l">${c[0]}</div></div>`).join("");
 }
-function esc(s){ return (s==null?"":String(s)).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m])); }
+function renderChips(){
+  const d=state.data;
+  const base = state.view==="contract" ? d.filter(r=>r.stage==="계약") : d;
+  const counts={};STAGES.forEach(s=>counts[s]=d.filter(r=>r.stage===s).length);
+  let chips=[["","전체",base.length]];
+  if(state.view==="db") STAGES.forEach(s=>chips.push([s,s,counts[s]]));
+  $("#chips").style.display = state.view==="db" ? "flex":"none";
+  $("#chips").innerHTML=chips.map(c=>`<div class="chip ${state.stageFilter===c[0]?'active':''}" data-stage="${esc(c[0])}">${esc(c[1])}<span class="c">${c[2]}</span></div>`).join("");
+}
+function renderAlert(){
+  const t=today();
+  const due=state.data.filter(r=>r.followup && r.followup<=t && r.stage!=="종료")
+    .sort((a,b)=>(a.followup||"").localeCompare(b.followup||""));
+  const box=$("#alertbox");
+  if(!due.length){ box.style.display="none"; return; }
+  box.style.display="block";
+  box.innerHTML=`<h3>🔔 오늘 연락할 곳 · ${due.length}건</h3>`+due.map(r=>{
+    const over=r.followup<t; const dd=Math.round((new Date(t)-new Date(r.followup))/86400000);
+    return `<div class="al-item"><span class="al-badge ${over?'over':''}">${over?dd+'일 지남':'오늘'}</span>
+      <span class="al-name">${esc(r.name||'-')}</span>
+      ${r.phone?`<a href="tel:${esc(r.phone)}">📞 ${esc(r.phone)}</a>`:''}</div>`;
+  }).join("");
+}
 function renderList(){
   const arr=currentList();
   if(!arr.length){ $("#list").innerHTML=`<div class="empty">데이터가 없습니다.<br>위 빠른입력칸에 한 줄 쳐보세요.</div>`; return; }
   $("#list").innerHTML=arr.map(r=>{
+    const isC=r.stage==="계약";
+    const kw=r.kw?`<span class="tag kw">${esc(r.kw)}kW</span>`:"";
     const type=r.type?`<span class="tag ${r.type==='RPS'?'rps':r.type}">${esc(r.type)}</span>`:"";
-    const kw=r.kw?`<b>${esc(r.kw)}kW</b>`:"";
+    const who=r.source?`<span class="tag who">${esc(r.source)}</span>`:"";
+    const area=r.area?`<span class="tag area">${esc(r.area)}</span>`:"";
     const amt=r.amount?`<span class="amt">${esc(r.amount)}</span>`:"";
-    const meta=[kw,type].filter(Boolean).join(" ");
-    const line2=[r.addr?`📍${esc(r.addr)}`:"",r.rep?`영업:${esc(r.rep)}`:"",r.source?`DB:${esc(r.source)}`:""].filter(Boolean).join("  ·  ");
-    const special=r.special?`<span class="tag" style="background:#3a1220;color:#fca5a5">${esc(r.special)}</span>`:"";
-    return `<div class="card" data-id="${r.id}">
+    const cdate=extractCdate(r.note);
+    return `<div class="card ${isC?'contract':''}" data-id="${r.id}">
       <div class="top">
         <span class="name">${esc(r.name||"(이름없음)")}</span>
         ${r.phone?`<a class="phone" href="tel:${esc(r.phone)}">${esc(r.phone)}</a>`:""}
         <span style="flex:1"></span>
+        ${cdate?`<span class="cdate">📅${esc(cdate)}</span>`:""}
         <span class="badge b-${esc(r.stage)}">${esc(r.stage)}</span>
       </div>
-      <div class="meta">${meta} ${amt} ${special}</div>
-      ${line2?`<div class="meta">${line2}</div>`:""}
+      ${r.addr?`<div class="addr"><span class="pin">📍</span><span>${esc(r.addr)}</span></div>`:""}
+      <div class="tags">${kw}${type}${area}${who}${amt}</div>
+      ${r.special?`<div class="special">⚑ ${esc(r.special)}</div>`:""}
       ${r.note?`<div class="note">${esc(r.note)}</div>`:""}
       <div class="row-actions">
         <button class="btn sm" data-edit="${r.id}">수정</button>
-        ${r.stage!=="계약"?`<button class="btn sm" data-contract="${r.id}">계약전환</button>`:`<button class="btn sm" data-stage="${r.id}">단계변경</button>`}
+        ${isC?`<button class="btn sm" data-stage="${r.id}">단계변경</button>`:`<button class="btn sm" data-contract="${r.id}">계약전환</button>`}
       </div>
     </div>`;
   }).join("");
 }
-function render(){ renderStats(); renderList(); }
+function render(){ renderStats(); renderChips(); renderAlert(); renderList(); }
 
-/* ---------- modal ---------- */
+/* modal */
 function openEdit(id){
   state.editingId=id;
   const r=id?state.data.find(x=>x.id===id):{stage:"상담예정"};
   $("#editTitle").textContent=id?"상담 수정":"상담 추가";
   $("#btnDelete").style.display=id?"block":"none";
-  ["name","phone","stage","type","kw","amount","addr","rep","source","followup","area","special","note"].forEach(f=>{
-    const el=$("#f_"+f); if(el) el.value=r[f]||"";
-  });
+  ["name","phone","stage","source","kw","type","amount","area","addr","rep","followup","special","note"].forEach(f=>{ const el=$("#f_"+f); if(el) el.value=r[f]||""; });
   $("#editBg").classList.add("show");
 }
 function closeEdit(){ $("#editBg").classList.remove("show"); state.editingId=null; }
 function saveEdit(){
   const patch={};
-  ["name","phone","stage","type","kw","amount","addr","rep","source","followup","area","special","note"].forEach(f=>{
-    patch[f]=$("#f_"+f).value.trim();
-  });
-  if(state.editingId) updateRecord(state.editingId,patch);
-  else addRecord(patch);
+  ["name","phone","stage","source","kw","type","amount","area","addr","rep","followup","special","note"].forEach(f=>{ patch[f]=$("#f_"+f).value.trim(); });
+  if(state.editingId) updateRecord(state.editingId,patch); else addRecord(patch);
   closeEdit(); render(); toast("저장됨");
 }
-
-/* ---------- toast ---------- */
 let toastT;
 function toast(m){ const t=$("#toast"); t.textContent=m; t.classList.add("show"); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("show"),1800); }
 
-/* ---------- events ---------- */
+/* events */
 document.querySelectorAll(".tab").forEach(tab=>tab.addEventListener("click",()=>{
   document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
-  tab.classList.add("active"); state.view=tab.dataset.view;
-  if(state.view==="contract"){ $("#fStage").value=""; }
-  render();
+  tab.classList.add("active"); state.view=tab.dataset.view; state.stageFilter=""; render();
 }));
+$("#chips").addEventListener("click",e=>{ const c=e.target.closest("[data-stage]"); if(!c)return; state.stageFilter=c.dataset.stage; render(); });
 $("#quickAdd").addEventListener("click",()=>{
   const v=$("#quickInput").value.trim(); if(!v)return;
-  const rec=parseQuick(v); addRecord(rec); $("#quickInput").value=""; render();
-  toast(`추가: ${rec.name||"이름없음"} ${rec.stage}`);
+  const rec=parseQuick(v); addRecord(rec); $("#quickInput").value=""; render(); toast(`추가: ${rec.name||"이름없음"} ${rec.stage}`);
 });
 $("#quickInput").addEventListener("keydown",e=>{ if(e.key==="Enter") $("#quickAdd").click(); });
-["input","change"].forEach(ev=>{ ["#search","#fStage","#fType","#sort"].forEach(s=>$(s).addEventListener(ev,render)); });
+["input","change"].forEach(ev=>{ ["#search","#sort"].forEach(s=>$(s).addEventListener(ev,render)); });
 $("#list").addEventListener("click",e=>{
   const ed=e.target.closest("[data-edit]"); if(ed){ openEdit(ed.dataset.edit); return; }
   const ct=e.target.closest("[data-contract]"); if(ct){ updateRecord(ct.dataset.contract,{stage:"계약"}); render(); toast("계약으로 전환"); return; }
-  const st=e.target.closest("[data-stage]"); if(st){ cycleStage(st.dataset.stage); return; }
+  const st=e.target.closest("[data-stage]"); if(st){ const r=state.data.find(x=>x.id===st.dataset.stage); const i=STAGES.indexOf(r.stage); updateRecord(st.dataset.stage,{stage:STAGES[(i+1)%STAGES.length]}); render(); toast("단계: "+state.data.find(x=>x.id===st.dataset.stage).stage); return; }
 });
-function cycleStage(id){
-  const r=state.data.find(x=>x.id===id); if(!r)return;
-  const i=STAGES.indexOf(r.stage); const next=STAGES[(i+1)%STAGES.length];
-  updateRecord(id,{stage:next}); render(); toast("단계: "+next);
-}
 $("#btnSave").addEventListener("click",saveEdit);
 $("#btnCancel").addEventListener("click",closeEdit);
 $("#btnDelete").addEventListener("click",()=>{ if(state.editingId&&confirm("이 상담을 삭제할까요?")){ deleteRecord(state.editingId); closeEdit(); render(); toast("삭제됨"); } });
 $("#editBg").addEventListener("click",e=>{ if(e.target===$("#editBg")) closeEdit(); });
 
-/* 메뉴 */
+/* menu */
 $("#btnMenu").addEventListener("click",()=>$("#menuBg").classList.add("show"));
 $("#menuClose").addEventListener("click",()=>$("#menuBg").classList.remove("show"));
 $("#menuBg").addEventListener("click",e=>{ if(e.target===$("#menuBg"))$("#menuBg").classList.remove("show"); });
-$("#mExport").addEventListener("click",()=>{
-  const blob=new Blob([JSON.stringify(state.data,null,2)],{type:"application/json"});
-  const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
-  a.download="상담DB_백업_"+new Date().toISOString().slice(0,10)+".json"; a.click(); toast("백업 저장됨");
-});
+$("#mSync").addEventListener("click",async()=>{ if(!cloud.on){toast("동기화 먼저 연결하세요");return;} toast("새로고침 중…"); try{await cloudPull(); render(); toast("최신으로 갱신됨");}catch(e){toast("실패: "+e.message);} });
+$("#mExport").addEventListener("click",()=>{ const blob=new Blob([JSON.stringify(state.data,null,2)],{type:"application/json"}); const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="상담DB_백업_"+today()+".json"; a.click(); toast("백업 저장됨"); });
 $("#mImport").addEventListener("click",()=>$("#fileImport").click());
-$("#fileImport").addEventListener("change",e=>{
-  const f=e.target.files[0]; if(!f)return; const rd=new FileReader();
-  rd.onload=()=>{ try{ const arr=JSON.parse(rd.result); if(!Array.isArray(arr))throw 0;
-    const ids=new Set(state.data.map(x=>x.id)); let n=0;
-    arr.forEach(x=>{ if(!x.id||!ids.has(x.id)){ x.id=x.id||uid(); state.data.push(x); n++; } });
-    saveLocal(); render(); toast(n+"건 병합됨");
-  }catch(err){ toast("불러오기 실패: 형식 오류"); } };
-  rd.readAsText(f); e.target.value="";
-});
-$("#mCsv").addEventListener("click",()=>{
-  const cols=["name","phone","stage","type","kw","amount","addr","rep","source","special","note","followup"];
-  const head=["이름","연락처","단계","유형","용량kW","계약금액","주소","영업","DB출처","특이사항","메모","다음연락일"];
-  const rows=state.data.map(r=>cols.map(c=>`"${(""+(r[c]||"")).replace(/"/g,'""')}"`).join(","));
-  const csv="﻿"+head.join(",")+"\n"+rows.join("\n");
-  const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
-  a.download="상담DB_"+new Date().toISOString().slice(0,10)+".csv"; a.click(); toast("CSV 저장됨");
-});
-$("#mReset").addEventListener("click",()=>{ if(confirm("정말 전체 삭제할까요? (백업 먼저 권장)")){ state.data=[]; saveLocal(); render(); toast("초기화됨"); } });
+$("#fileImport").addEventListener("change",e=>{ const f=e.target.files[0]; if(!f)return; const rd=new FileReader(); rd.onload=()=>{ try{ const arr=JSON.parse(rd.result); if(!Array.isArray(arr))throw 0; const ids=new Set(state.data.map(x=>x.id)); let n=0; arr.forEach(x=>{ if(!x.id||!ids.has(x.id)){ x.id=x.id||uid(); state.data.push(x); n++; } }); saveLocal(); render(); toast(n+"건 병합됨"); }catch(err){ toast("불러오기 실패"); } }; rd.readAsText(f); e.target.value=""; });
+$("#mCsv").addEventListener("click",()=>{ const cols=["name","phone","stage","source","kw","type","amount","area","addr","special","note","followup"]; const head=["이름","연락처","단계","누구디비","용량kW","유형","계약금액","평수","주소","특이사항","메모","다음연락일"]; const rows=state.data.map(r=>cols.map(c=>`"${(""+(r[c]||"")).replace(/"/g,'""')}"`).join(",")); const csv="﻿"+head.join(",")+"\n"+rows.join("\n"); const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"})); a.download="상담DB_"+today()+".csv"; a.click(); toast("CSV 저장됨"); });
+$("#mReset").addEventListener("click",()=>{ if(confirm("이 기기 화면 목록을 비웁니다. (클라우드 데이터는 남아있고, 다시 동기화하면 내려받습니다) 진행할까요?")){ state.data=[]; saveLocal(); render(); toast("비웠습니다. 동기화하면 내려받습니다"); } });
 
-/* 클라우드 */
-$("#btnCloud").addEventListener("click",()=>{
-  $("#c_url").value=cloud.url||""; $("#c_key").value=cloud.key||"";
-  $("#cloudStatus").textContent=cloud.on?"현재 연결됨 ✓":"";
-  $("#cloudBg").classList.add("show");
-});
+/* cloud */
+$("#btnCloud").addEventListener("click",()=>{ $("#c_url").value=cloud.url||""; $("#c_key").value=cloud.key||""; $("#cloudStatus").textContent=cloud.on?"현재 연결됨 ✓":""; $("#cloudBg").classList.add("show"); });
 $("#cloudBg").addEventListener("click",e=>{ if(e.target===$("#cloudBg"))$("#cloudBg").classList.remove("show"); });
 $("#cloudOff").addEventListener("click",()=>{ cloud.on=false; saveCloudCfg(); updateCloudDot(); $("#cloudBg").classList.remove("show"); toast("동기화 꺼짐"); });
 $("#cloudSave").addEventListener("click",async()=>{
-  cloud.url=$("#c_url").value.trim().replace(/\/$/,""); cloud.key=$("#c_key").value.trim();
+  cloud.url=$("#c_url").value.trim().replace(/\/+$/,"").replace(/\/rest\/v1$/,""); cloud.key=$("#c_key").value.trim();
   if(!cloud.url||!cloud.key){ toast("URL과 Key를 입력하세요"); return; }
   cloud.on=true; saveCloudCfg(); $("#cloudStatus").textContent="연결 시도 중…";
-  try{ await cloudPull(); render(); updateCloudDot(); $("#cloudStatus").textContent="연결됨 ✓ 데이터 동기화 완료"; toast("클라우드 연결됨");
-    // push local-only records
-    for(const r of state.data){ if(!r.remote_id) await cloudPush(r); }
-  }catch(e){ cloud.on=false; saveCloudCfg(); updateCloudDot(); $("#cloudStatus").textContent="연결 실패: "+e.message+" (URL/Key/테이블 확인)"; }
+  try{ await cloudPull(); for(const r of state.data){ if(!r.remote_id) await cloudPush(r); } render(); updateCloudDot(); $("#cloudStatus").textContent="연결됨 ✓ 동기화 완료"; toast("클라우드 연결됨"); }
+  catch(e){ cloud.on=false; saveCloudCfg(); updateCloudDot(); $("#cloudStatus").textContent="연결 실패: "+e.message; }
 });
 function updateCloudDot(){ $("#cloudDot").classList.toggle("on",!!cloud.on); }
 
-/* ---------- seed (사진 데이터) ---------- */
-function seed(){
-  const dbList=[
-    {name:"이정원"},{name:"정민주"},{name:"자유관"},
-    {name:"이성균"},{name:"전경하"},{name:"김포시 관리소장",special:"연락안됨"},
-    {name:"윤준섭"},{name:"구본철"},{name:"유경수"},{name:"조종래"},
-    {name:"이성주"}
-  ].map(x=>Object.assign({stage:"상담예정",source:"자체 / 민경민 DB",type:"",kw:"",amount:"",phone:"",addr:"",rep:"",special:x.special||"",note:x.note||""},x));
-  const contracts=[
-    {name:"조수현",kw:"200",amount:"2.2억",type:"RPS"},
-    {name:"허명구",kw:"30",amount:"5200만",type:"RPS"},
-    {name:"양원준",kw:"30",type:"임대"},
-    {name:"윤정헌",kw:"80",type:"RPS"},
-    {name:"최서원",kw:"18",type:"RPS",note:"기존 상담DB에 있던 분"},
-    {name:"우사님",kw:"50",type:"임대"},
-    {name:"이진석",kw:"45",type:"임대"},
-    {name:"고승우",kw:"50",type:"RPS"},
-    {name:"김순기",kw:"45",amount:"6750만",type:"현금"},
-    {name:"권미온",kw:"40",type:"임대"},
-    {name:"박해을",kw:"30",type:"임대"},
-    {name:"자유관",kw:"65",type:"임대"}
-  ].map(x=>Object.assign({stage:"계약",phone:"",addr:"",rep:"",source:"",special:"",amount:x.amount||"",note:x.note||""},x));
-  return [...dbList,...contracts].map(x=>Object.assign({id:uid(),created_at:now(),updated_at:now()},x));
-}
-
-/* ---------- init ---------- */
+/* init — 자동 시드 없음(데이터는 클라우드/직접입력) */
 function init(){
   loadCloudCfg(); loadLocal(); updateCloudDot();
-  if(!localStorage.getItem(LS_KEY)){ state.data=seed(); saveLocal(); }
   if(cloud.on){ cloudPull().then(render).catch(()=>{}); }
   render();
 }
