@@ -1,0 +1,507 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+<meta name="theme-color" content="#0f172a" />
+<title>이안 상담DB · 계약관리</title>
+<style>
+  :root{
+    --bg:#0f172a; --panel:#1e293b; --panel2:#273449; --line:#334155;
+    --txt:#e2e8f0; --muted:#94a3b8; --accent:#38bdf8; --accent2:#0ea5e9;
+    --ok:#22c55e; --warn:#f59e0b; --danger:#ef4444; --purple:#a855f7; --blue:#3b82f6;
+    --radius:14px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Malgun Gothic",sans-serif;
+    background:var(--bg); color:var(--txt); font-size:15px; -webkit-text-size-adjust:100%; padding-bottom:80px;}
+  header{position:sticky;top:0;z-index:30;background:rgba(15,23,42,.92);backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--line);padding:10px 14px;}
+  .brand{display:flex;align-items:center;gap:8px;justify-content:space-between}
+  .brand h1{font-size:17px;margin:0;font-weight:800;letter-spacing:-.3px}
+  .brand h1 span{color:var(--accent)}
+  .cloud-dot{width:9px;height:9px;border-radius:50%;background:var(--danger);display:inline-block;margin-right:5px;vertical-align:middle}
+  .cloud-dot.on{background:var(--ok)}
+  .btn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);border-radius:10px;
+    padding:8px 12px;font-size:14px;cursor:pointer;font-weight:600}
+  .btn:active{transform:scale(.97)}
+  .btn.primary{background:var(--accent2);border-color:var(--accent2);color:#00131f}
+  .btn.ghost{background:transparent}
+  .btn.sm{padding:5px 9px;font-size:13px}
+  .btn.danger{color:#fff;background:var(--danger);border-color:var(--danger)}
+  .tabs{display:flex;gap:6px;margin-top:10px}
+  .tab{flex:1;text-align:center;padding:9px;border-radius:10px;background:var(--panel);border:1px solid var(--line);
+    font-weight:700;cursor:pointer;color:var(--muted);font-size:14px}
+  .tab.active{background:var(--accent2);color:#00131f;border-color:var(--accent2)}
+  .wrap{padding:12px 14px;max-width:900px;margin:0 auto}
+  .quick{display:flex;gap:8px;margin-bottom:12px}
+  .quick input{flex:1;background:var(--panel);border:1px solid var(--line);border-radius:12px;
+    padding:12px 14px;color:var(--txt);font-size:15px}
+  .quick input::placeholder{color:#64748b}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+  .toolbar input.search{flex:1;min-width:140px;background:var(--panel);border:1px solid var(--line);
+    border-radius:10px;padding:9px 12px;color:var(--txt);font-size:14px}
+  select{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:9px 10px;color:var(--txt);font-size:14px}
+  .stats{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+  .stat{flex:1;min-width:90px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+  .stat .n{font-size:20px;font-weight:800}
+  .stat .l{font-size:12px;color:var(--muted);margin-top:2px}
+  .list{display:flex;flex-direction:column;gap:9px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:12px 13px;position:relative}
+  .card .top{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .card .name{font-weight:800;font-size:16px}
+  .card .phone{color:var(--accent);font-size:14px;text-decoration:none}
+  .card .meta{color:var(--muted);font-size:13px;margin-top:5px;line-height:1.5}
+  .card .meta b{color:var(--txt);font-weight:600}
+  .card .note{margin-top:6px;font-size:13px;color:#cbd5e1;background:var(--panel2);border-radius:8px;padding:6px 9px;white-space:pre-wrap}
+  .badge{font-size:11px;font-weight:800;padding:3px 8px;border-radius:999px;white-space:nowrap}
+  .b-상담예정{background:#334155;color:#cbd5e1}
+  .b-1차상담{background:#1e3a5f;color:#7dd3fc}
+  .b-2차상담{background:#3b2f5e;color:#c4b5fd}
+  .b-계약{background:#14532d;color:#86efac}
+  .b-종료{background:#1f2937;color:#6b7280}
+  .tag{font-size:11px;font-weight:700;padding:3px 8px;border-radius:6px;background:var(--panel2);color:var(--muted)}
+  .tag.rps{background:#3b2f10;color:#fcd34d}
+  .tag.임대{background:#0e2a3a;color:#7dd3fc}
+  .tag.현금{background:#14331f;color:#86efac}
+  .amt{font-weight:800;color:#fcd34d;font-size:14px}
+  .row-actions{display:flex;gap:6px;margin-top:9px}
+  .empty{text-align:center;color:var(--muted);padding:40px 10px}
+  /* modal */
+  .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:flex-end;justify-content:center;z-index:50}
+  .modal-bg.show{display:flex}
+  .modal{background:var(--panel);width:100%;max-width:560px;border-radius:18px 18px 0 0;padding:16px;max-height:92vh;overflow:auto}
+  @media(min-width:560px){.modal-bg{align-items:center}.modal{border-radius:18px}}
+  .modal h3{margin:0 0 12px}
+  .fgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .field{display:flex;flex-direction:column;gap:4px}
+  .field.full{grid-column:1/-1}
+  .field label{font-size:12px;color:var(--muted);font-weight:600}
+  .field input,.field select,.field textarea{background:var(--panel2);border:1px solid var(--line);border-radius:9px;
+    padding:9px 10px;color:var(--txt);font-size:14px;font-family:inherit}
+  .field textarea{min-height:64px;resize:vertical}
+  .modal-actions{display:flex;gap:8px;margin-top:16px}
+  .modal-actions .btn{flex:1;padding:12px}
+  .hint{font-size:12px;color:var(--muted);line-height:1.6}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#0b1220;border:1px solid var(--line);
+    color:var(--txt);padding:11px 18px;border-radius:12px;z-index:80;opacity:0;transition:.25s;pointer-events:none;font-weight:600;font-size:14px}
+  .toast.show{opacity:1}
+  code{background:var(--panel2);padding:2px 5px;border-radius:5px;font-size:12px}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <h1>이안 <span>상담DB</span></h1>
+    <div>
+      <button class="btn sm ghost" id="btnCloud" title="클라우드 동기화 설정"><span class="cloud-dot" id="cloudDot"></span>동기화</button>
+      <button class="btn sm ghost" id="btnMenu">⋯</button>
+    </div>
+  </div>
+  <div class="tabs">
+    <div class="tab active" data-view="db">📋 상담DB</div>
+    <div class="tab" data-view="contract">✅ 계약현황</div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="quick">
+    <input id="quickInput" placeholder="빠른입력: 홍길동 01012345678 30kw 임대 상담예정 …" />
+    <button class="btn primary" id="quickAdd">추가</button>
+  </div>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="toolbar">
+    <input class="search" id="search" placeholder="🔍 이름·전화·주소·메모 검색" />
+    <select id="fStage">
+      <option value="">단계 전체</option>
+      <option>상담예정</option><option>1차상담</option><option>2차상담</option><option>계약</option><option>종료</option>
+    </select>
+    <select id="fType">
+      <option value="">유형 전체</option>
+      <option>임대</option><option>RPS</option><option>현금</option>
+    </select>
+    <select id="sort">
+      <option value="updated">최근수정순</option>
+      <option value="name">이름순</option>
+      <option value="amount">금액순</option>
+    </select>
+  </div>
+
+  <div class="list" id="list"></div>
+</div>
+
+<!-- 편집 모달 -->
+<div class="modal-bg" id="editBg">
+  <div class="modal">
+    <h3 id="editTitle">상담 추가</h3>
+    <div class="fgrid">
+      <div class="field"><label>이름</label><input id="f_name"/></div>
+      <div class="field"><label>연락처</label><input id="f_phone" inputmode="numeric"/></div>
+      <div class="field"><label>단계</label>
+        <select id="f_stage"><option>상담예정</option><option>1차상담</option><option>2차상담</option><option>계약</option><option>종료</option></select>
+      </div>
+      <div class="field"><label>유형</label>
+        <select id="f_type"><option value="">-</option><option>임대</option><option>RPS</option><option>현금</option></select>
+      </div>
+      <div class="field"><label>용량(kW)</label><input id="f_kw" inputmode="decimal"/></div>
+      <div class="field"><label>계약금액</label><input id="f_amount" placeholder="예: 6,750만 / 2.2억"/></div>
+      <div class="field full"><label>주소</label><input id="f_addr"/></div>
+      <div class="field"><label>영업담당</label><input id="f_rep"/></div>
+      <div class="field"><label>DB출처</label><input id="f_source" placeholder="예: 자체 / 민경민 DB"/></div>
+      <div class="field"><label>다음연락일</label><input id="f_followup" type="date"/></div>
+      <div class="field"><label>평수/면적</label><input id="f_area"/></div>
+      <div class="field full"><label>특이사항</label><input id="f_special" placeholder="예: 목조 / 평수작음 / 연락안됨"/></div>
+      <div class="field full"><label>메모</label><textarea id="f_note"></textarea></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn danger" id="btnDelete" style="flex:0 0 auto">삭제</button>
+      <button class="btn ghost" id="btnCancel">취소</button>
+      <button class="btn primary" id="btnSave">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 메뉴 모달 -->
+<div class="modal-bg" id="menuBg">
+  <div class="modal">
+    <h3>메뉴 / 백업</h3>
+    <div style="display:flex;flex-direction:column;gap:9px">
+      <button class="btn" id="mExport">💾 JSON 백업 내보내기</button>
+      <button class="btn" id="mImport">📂 JSON 불러오기 (병합)</button>
+      <input type="file" id="fileImport" accept="application/json" style="display:none"/>
+      <button class="btn" id="mCsv">📊 CSV 내보내기 (엑셀)</button>
+      <button class="btn danger" id="mReset">🗑 전체 초기화</button>
+    </div>
+    <p class="hint" style="margin-top:14px">데이터는 이 브라우저(localStorage)에 저장됩니다. 클라우드 동기화를 켜면 PC·폰이 같은 데이터를 봅니다. 정기적으로 JSON 백업을 권장합니다.</p>
+    <div class="modal-actions"><button class="btn ghost" id="menuClose" style="flex:1">닫기</button></div>
+  </div>
+</div>
+
+<!-- 클라우드 설정 모달 -->
+<div class="modal-bg" id="cloudBg">
+  <div class="modal">
+    <h3>☁ 클라우드 동기화 (Supabase)</h3>
+    <p class="hint">PC와 폰에서 <b>같은 데이터</b>를 보려면 여기에 Supabase 정보를 입력하세요. 텔레그램 봇 때 만든 그 Supabase를 그대로 쓰면 됩니다. 테이블 이름은 <code>consultations</code>.</p>
+    <div class="fgrid" style="margin-top:10px">
+      <div class="field full"><label>Supabase URL</label><input id="c_url" placeholder="https://xxxx.supabase.co"/></div>
+      <div class="field full"><label>API Key (anon 권장)</label><input id="c_key" placeholder="eyJ..."/></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn ghost" id="cloudOff">동기화 끄기</button>
+      <button class="btn primary" id="cloudSave">연결 & 동기화</button>
+    </div>
+    <p class="hint" id="cloudStatus" style="margin-top:10px"></p>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+const LS_KEY="ianDB_v1", LS_CLOUD="ianDB_cloud_v1";
+const STAGES=["상담예정","1차상담","2차상담","계약","종료"];
+const $=s=>document.querySelector(s);
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const now=()=>new Date().toISOString();
+
+let state={ view:"db", data:[], editingId:null };
+let cloud={ url:"", key:"", on:false };
+
+/* ---------- storage ---------- */
+function loadLocal(){ try{state.data=JSON.parse(localStorage.getItem(LS_KEY)||"[]")}catch(e){state.data=[]} }
+function saveLocal(){ localStorage.setItem(LS_KEY, JSON.stringify(state.data)); }
+function loadCloudCfg(){ try{cloud=Object.assign(cloud,JSON.parse(localStorage.getItem(LS_CLOUD)||"{}"))}catch(e){} }
+function saveCloudCfg(){ localStorage.setItem(LS_CLOUD, JSON.stringify(cloud)); }
+
+/* ---------- Supabase REST ---------- */
+function sbHeaders(){ return {apikey:cloud.key,Authorization:"Bearer "+cloud.key,"Content-Type":"application/json"}; }
+async function cloudPull(){
+  if(!cloud.on) return;
+  const r=await fetch(`${cloud.url}/rest/v1/consultations?select=*&order=updated_at.desc`,{headers:sbHeaders()});
+  if(!r.ok) throw new Error("pull "+r.status);
+  const rows=await r.json();
+  // merge by remote id -> map to local records
+  const byRemote={}; state.data.forEach(d=>{ if(d.remote_id) byRemote[d.remote_id]=d; });
+  rows.forEach(row=>{
+    const rec=fromRemote(row);
+    const ex=byRemote[row.id];
+    if(ex){ Object.assign(ex,rec,{id:ex.id,remote_id:row.id}); }
+    else { state.data.push(Object.assign(rec,{id:uid(),remote_id:row.id})); }
+  });
+  saveLocal();
+}
+async function cloudPush(rec){
+  if(!cloud.on) return;
+  const body=toRemote(rec);
+  try{
+    if(rec.remote_id){
+      await fetch(`${cloud.url}/rest/v1/consultations?id=eq.${rec.remote_id}`,{method:"PATCH",headers:sbHeaders(),body:JSON.stringify(body)});
+    }else{
+      const r=await fetch(`${cloud.url}/rest/v1/consultations`,{method:"POST",headers:Object.assign(sbHeaders(),{Prefer:"return=representation"}),body:JSON.stringify(body)});
+      if(r.ok){ const j=await r.json(); if(j&&j[0]&&j[0].id){ rec.remote_id=j[0].id; saveLocal(); } }
+    }
+  }catch(e){ console.warn("push fail",e); }
+}
+async function cloudDelete(rec){
+  if(!cloud.on||!rec.remote_id) return;
+  try{ await fetch(`${cloud.url}/rest/v1/consultations?id=eq.${rec.remote_id}`,{method:"DELETE",headers:sbHeaders()}); }catch(e){}
+}
+const REMOTE_FIELDS=["name","phone","addr","area","kw","type","amount","stage","rep","source","note","special","followup","created_at","updated_at"];
+function toRemote(r){ const o={}; REMOTE_FIELDS.forEach(f=>{ let k=f==="addr"?"addr":f; o[f]=r[mapLocal(f)]||null; }); return o; }
+function mapLocal(f){ return ({addr:"addr",created_at:"created_at",updated_at:"updated_at"})[f]||f; }
+function fromRemote(row){
+  return { name:row.name||"", phone:row.phone||"", addr:row.addr||"", area:row.area||"", kw:row.kw||"",
+    type:row.type||"", amount:row.amount||"", stage:row.stage||"상담예정", rep:row.rep||"", source:row.source||"",
+    note:row.note||"", special:row.special||"", followup:row.followup||"",
+    created_at:row.created_at||now(), updated_at:row.updated_at||now() };
+}
+
+/* ---------- quick parse (규칙 기반, AI 불필요) ---------- */
+function parseQuick(text){
+  const rec={ name:"",phone:"",kw:"",type:"",amount:"",stage:"",addr:"",source:"",special:"",note:"" };
+  let t=" "+text.trim()+" ";
+  // 전화
+  const ph=t.match(/01[016789][\s\-]?\d{3,4}[\s\-]?\d{4}/);
+  if(ph){ rec.phone=ph[0].replace(/[\s\-]/g,""); t=t.replace(ph[0]," "); }
+  // 용량 kw
+  const kw=t.match(/(\d+(?:\.\d+)?)\s*(?:kw|kW|KW|키로|킬로|㎾)/);
+  if(kw){ rec.kw=kw[1]; t=t.replace(kw[0]," "); }
+  // 금액
+  const eok=t.match(/(\d+(?:\.\d+)?)\s*억/); const man=t.match(/([\d,]+)\s*만/);
+  if(eok||man){ rec.amount=(eok?eok[1]+"억":"")+(man?man[1].replace(/,/g,"")+"만":""); if(eok)t=t.replace(eok[0]," "); if(man)t=t.replace(man[0]," "); }
+  // 유형
+  if(/임대/.test(t)){rec.type="임대";t=t.replace(/임대/g," ");}
+  else if(/rps/i.test(t)){rec.type="RPS";t=t.replace(/rps/ig," ");}
+  else if(/현금|자부담/.test(t)){rec.type="현금";t=t.replace(/현금|자부담/g," ");}
+  // 단계
+  for(const s of STAGES){ if(t.includes(s)){rec.stage=s;t=t.replace(s," ");break;} }
+  // 특이사항 키워드
+  const spKeys=["목조","평수작음","연락안됨","부재","재통화","경사지붕","무허가","가건물"];
+  spKeys.forEach(k=>{ if(t.includes(k)){ rec.special=(rec.special?rec.special+" ":"")+k; t=t.replace(new RegExp(k,"g")," "); } });
+  // 이름 = 첫 한글 토큰(2~4자)
+  const nm=t.trim().match(/[가-힣]{2,4}/);
+  if(nm){ rec.name=nm[0]; t=t.replace(nm[0]," "); }
+  // 나머지는 메모
+  const rest=t.replace(/\s+/g," ").trim();
+  if(rest) rec.note=rest;
+  if(!rec.stage) rec.stage = rec.type==="RPS"||rec.type==="임대"||rec.type==="현금" ? "계약" : "상담예정";
+  return rec;
+}
+
+/* ---------- CRUD ---------- */
+function addRecord(rec){
+  const r=Object.assign({id:uid(),created_at:now(),updated_at:now(),stage:"상담예정"},rec);
+  state.data.unshift(r); saveLocal(); cloudPush(r); return r;
+}
+function updateRecord(id,patch){
+  const r=state.data.find(x=>x.id===id); if(!r)return;
+  Object.assign(r,patch,{updated_at:now()}); saveLocal(); cloudPush(r);
+}
+function deleteRecord(id){
+  const i=state.data.findIndex(x=>x.id===id); if(i<0)return;
+  const r=state.data[i]; state.data.splice(i,1); saveLocal(); cloudDelete(r);
+}
+
+/* ---------- amount parse for stats ---------- */
+function amtToMan(s){ if(!s)return 0; let m=0; const e=(""+s).match(/(\d+(?:\.\d+)?)\s*억/); const w=(""+s).match(/([\d,]+)\s*만/);
+  if(e)m+=parseFloat(e[1])*10000; if(w)m+=parseFloat(w[1].replace(/,/g,"")); return m; }
+function fmtMan(n){ if(!n)return "-"; if(n>=10000){ const e=n/10000; return (Number.isInteger(e)?e:e.toFixed(1))+"억"; } return n.toLocaleString()+"만"; }
+
+/* ---------- render ---------- */
+function currentList(){
+  let arr=state.data.slice();
+  if(state.view==="contract") arr=arr.filter(r=>r.stage==="계약");
+  const q=$("#search").value.trim();
+  const fs=$("#fStage").value, ft=$("#fType").value;
+  if(q){ const k=q.toLowerCase(); arr=arr.filter(r=>[r.name,r.phone,r.addr,r.note,r.source,r.special,r.rep].join(" ").toLowerCase().includes(k)); }
+  if(fs) arr=arr.filter(r=>r.stage===fs);
+  if(ft) arr=arr.filter(r=>r.type===ft);
+  const sort=$("#sort").value;
+  arr.sort((a,b)=>{
+    if(sort==="name") return (a.name||"").localeCompare(b.name||"","ko");
+    if(sort==="amount") return amtToMan(b.amount)-amtToMan(a.amount);
+    return (b.updated_at||"").localeCompare(a.updated_at||"");
+  });
+  return arr;
+}
+function renderStats(){
+  const d=state.data;
+  const contracts=d.filter(r=>r.stage==="계약");
+  const total=contracts.reduce((s,r)=>s+amtToMan(r.amount),0);
+  const cards = state.view==="contract"
+    ? [["계약 건수",contracts.length+"건"],["계약금액 합계",fmtMan(total)],["임대",contracts.filter(r=>r.type==="임대").length+"건"],["RPS",contracts.filter(r=>r.type==="RPS").length+"건"]]
+    : [["전체",d.length+"건"],["상담예정",d.filter(r=>r.stage==="상담예정").length+"건"],["진행중",d.filter(r=>["1차상담","2차상담"].includes(r.stage)).length+"건"],["계약",contracts.length+"건"]];
+  $("#stats").innerHTML=cards.map(c=>`<div class="stat"><div class="n">${c[1]}</div><div class="l">${c[0]}</div></div>`).join("");
+}
+function esc(s){ return (s==null?"":String(s)).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m])); }
+function renderList(){
+  const arr=currentList();
+  if(!arr.length){ $("#list").innerHTML=`<div class="empty">데이터가 없습니다.<br>위 빠른입력칸에 한 줄 쳐보세요.</div>`; return; }
+  $("#list").innerHTML=arr.map(r=>{
+    const type=r.type?`<span class="tag ${r.type==='RPS'?'rps':r.type}">${esc(r.type)}</span>`:"";
+    const kw=r.kw?`<b>${esc(r.kw)}kW</b>`:"";
+    const amt=r.amount?`<span class="amt">${esc(r.amount)}</span>`:"";
+    const meta=[kw,type].filter(Boolean).join(" ");
+    const line2=[r.addr?`📍${esc(r.addr)}`:"",r.rep?`영업:${esc(r.rep)}`:"",r.source?`DB:${esc(r.source)}`:""].filter(Boolean).join("  ·  ");
+    const special=r.special?`<span class="tag" style="background:#3a1220;color:#fca5a5">${esc(r.special)}</span>`:"";
+    return `<div class="card" data-id="${r.id}">
+      <div class="top">
+        <span class="name">${esc(r.name||"(이름없음)")}</span>
+        ${r.phone?`<a class="phone" href="tel:${esc(r.phone)}">${esc(r.phone)}</a>`:""}
+        <span style="flex:1"></span>
+        <span class="badge b-${esc(r.stage)}">${esc(r.stage)}</span>
+      </div>
+      <div class="meta">${meta} ${amt} ${special}</div>
+      ${line2?`<div class="meta">${line2}</div>`:""}
+      ${r.note?`<div class="note">${esc(r.note)}</div>`:""}
+      <div class="row-actions">
+        <button class="btn sm" data-edit="${r.id}">수정</button>
+        ${r.stage!=="계약"?`<button class="btn sm" data-contract="${r.id}">계약전환</button>`:`<button class="btn sm" data-stage="${r.id}">단계변경</button>`}
+      </div>
+    </div>`;
+  }).join("");
+}
+function render(){ renderStats(); renderList(); }
+
+/* ---------- modal ---------- */
+function openEdit(id){
+  state.editingId=id;
+  const r=id?state.data.find(x=>x.id===id):{stage:"상담예정"};
+  $("#editTitle").textContent=id?"상담 수정":"상담 추가";
+  $("#btnDelete").style.display=id?"block":"none";
+  ["name","phone","stage","type","kw","amount","addr","rep","source","followup","area","special","note"].forEach(f=>{
+    const el=$("#f_"+f); if(el) el.value=r[f]||"";
+  });
+  $("#editBg").classList.add("show");
+}
+function closeEdit(){ $("#editBg").classList.remove("show"); state.editingId=null; }
+function saveEdit(){
+  const patch={};
+  ["name","phone","stage","type","kw","amount","addr","rep","source","followup","area","special","note"].forEach(f=>{
+    patch[f]=$("#f_"+f).value.trim();
+  });
+  if(state.editingId) updateRecord(state.editingId,patch);
+  else addRecord(patch);
+  closeEdit(); render(); toast("저장됨");
+}
+
+/* ---------- toast ---------- */
+let toastT;
+function toast(m){ const t=$("#toast"); t.textContent=m; t.classList.add("show"); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("show"),1800); }
+
+/* ---------- events ---------- */
+document.querySelectorAll(".tab").forEach(tab=>tab.addEventListener("click",()=>{
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+  tab.classList.add("active"); state.view=tab.dataset.view;
+  if(state.view==="contract"){ $("#fStage").value=""; }
+  render();
+}));
+$("#quickAdd").addEventListener("click",()=>{
+  const v=$("#quickInput").value.trim(); if(!v)return;
+  const rec=parseQuick(v); addRecord(rec); $("#quickInput").value=""; render();
+  toast(`추가: ${rec.name||"이름없음"} ${rec.stage}`);
+});
+$("#quickInput").addEventListener("keydown",e=>{ if(e.key==="Enter") $("#quickAdd").click(); });
+["input","change"].forEach(ev=>{ ["#search","#fStage","#fType","#sort"].forEach(s=>$(s).addEventListener(ev,render)); });
+$("#list").addEventListener("click",e=>{
+  const ed=e.target.closest("[data-edit]"); if(ed){ openEdit(ed.dataset.edit); return; }
+  const ct=e.target.closest("[data-contract]"); if(ct){ updateRecord(ct.dataset.contract,{stage:"계약"}); render(); toast("계약으로 전환"); return; }
+  const st=e.target.closest("[data-stage]"); if(st){ cycleStage(st.dataset.stage); return; }
+});
+function cycleStage(id){
+  const r=state.data.find(x=>x.id===id); if(!r)return;
+  const i=STAGES.indexOf(r.stage); const next=STAGES[(i+1)%STAGES.length];
+  updateRecord(id,{stage:next}); render(); toast("단계: "+next);
+}
+$("#btnSave").addEventListener("click",saveEdit);
+$("#btnCancel").addEventListener("click",closeEdit);
+$("#btnDelete").addEventListener("click",()=>{ if(state.editingId&&confirm("이 상담을 삭제할까요?")){ deleteRecord(state.editingId); closeEdit(); render(); toast("삭제됨"); } });
+$("#editBg").addEventListener("click",e=>{ if(e.target===$("#editBg")) closeEdit(); });
+
+/* 메뉴 */
+$("#btnMenu").addEventListener("click",()=>$("#menuBg").classList.add("show"));
+$("#menuClose").addEventListener("click",()=>$("#menuBg").classList.remove("show"));
+$("#menuBg").addEventListener("click",e=>{ if(e.target===$("#menuBg"))$("#menuBg").classList.remove("show"); });
+$("#mExport").addEventListener("click",()=>{
+  const blob=new Blob([JSON.stringify(state.data,null,2)],{type:"application/json"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
+  a.download="상담DB_백업_"+new Date().toISOString().slice(0,10)+".json"; a.click(); toast("백업 저장됨");
+});
+$("#mImport").addEventListener("click",()=>$("#fileImport").click());
+$("#fileImport").addEventListener("change",e=>{
+  const f=e.target.files[0]; if(!f)return; const rd=new FileReader();
+  rd.onload=()=>{ try{ const arr=JSON.parse(rd.result); if(!Array.isArray(arr))throw 0;
+    const ids=new Set(state.data.map(x=>x.id)); let n=0;
+    arr.forEach(x=>{ if(!x.id||!ids.has(x.id)){ x.id=x.id||uid(); state.data.push(x); n++; } });
+    saveLocal(); render(); toast(n+"건 병합됨");
+  }catch(err){ toast("불러오기 실패: 형식 오류"); } };
+  rd.readAsText(f); e.target.value="";
+});
+$("#mCsv").addEventListener("click",()=>{
+  const cols=["name","phone","stage","type","kw","amount","addr","rep","source","special","note","followup"];
+  const head=["이름","연락처","단계","유형","용량kW","계약금액","주소","영업","DB출처","특이사항","메모","다음연락일"];
+  const rows=state.data.map(r=>cols.map(c=>`"${(""+(r[c]||"")).replace(/"/g,'""')}"`).join(","));
+  const csv="﻿"+head.join(",")+"\n"+rows.join("\n");
+  const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
+  a.download="상담DB_"+new Date().toISOString().slice(0,10)+".csv"; a.click(); toast("CSV 저장됨");
+});
+$("#mReset").addEventListener("click",()=>{ if(confirm("정말 전체 삭제할까요? (백업 먼저 권장)")){ state.data=[]; saveLocal(); render(); toast("초기화됨"); } });
+
+/* 클라우드 */
+$("#btnCloud").addEventListener("click",()=>{
+  $("#c_url").value=cloud.url||""; $("#c_key").value=cloud.key||"";
+  $("#cloudStatus").textContent=cloud.on?"현재 연결됨 ✓":"";
+  $("#cloudBg").classList.add("show");
+});
+$("#cloudBg").addEventListener("click",e=>{ if(e.target===$("#cloudBg"))$("#cloudBg").classList.remove("show"); });
+$("#cloudOff").addEventListener("click",()=>{ cloud.on=false; saveCloudCfg(); updateCloudDot(); $("#cloudBg").classList.remove("show"); toast("동기화 꺼짐"); });
+$("#cloudSave").addEventListener("click",async()=>{
+  cloud.url=$("#c_url").value.trim().replace(/\/$/,""); cloud.key=$("#c_key").value.trim();
+  if(!cloud.url||!cloud.key){ toast("URL과 Key를 입력하세요"); return; }
+  cloud.on=true; saveCloudCfg(); $("#cloudStatus").textContent="연결 시도 중…";
+  try{ await cloudPull(); render(); updateCloudDot(); $("#cloudStatus").textContent="연결됨 ✓ 데이터 동기화 완료"; toast("클라우드 연결됨");
+    // push local-only records
+    for(const r of state.data){ if(!r.remote_id) await cloudPush(r); }
+  }catch(e){ cloud.on=false; saveCloudCfg(); updateCloudDot(); $("#cloudStatus").textContent="연결 실패: "+e.message+" (URL/Key/테이블 확인)"; }
+});
+function updateCloudDot(){ $("#cloudDot").classList.toggle("on",!!cloud.on); }
+
+/* ---------- seed (사진 데이터) ---------- */
+function seed(){
+  const dbList=[
+    {name:"이정원"},{name:"정민주"},{name:"자유관"},
+    {name:"이성균"},{name:"전경하"},{name:"김포시 관리소장",special:"연락안됨"},
+    {name:"윤준섭"},{name:"구본철"},{name:"유경수"},{name:"조종래"},
+    {name:"이성주"}
+  ].map(x=>Object.assign({stage:"상담예정",source:"자체 / 민경민 DB",type:"",kw:"",amount:"",phone:"",addr:"",rep:"",special:x.special||"",note:x.note||""},x));
+  const contracts=[
+    {name:"조수현",kw:"200",amount:"2.2억",type:"RPS"},
+    {name:"허명구",kw:"30",amount:"5200만",type:"RPS"},
+    {name:"양원준",kw:"30",type:"임대"},
+    {name:"윤정헌",kw:"80",type:"RPS"},
+    {name:"최서원",kw:"18",type:"RPS",note:"기존 상담DB에 있던 분"},
+    {name:"우사님",kw:"50",type:"임대"},
+    {name:"이진석",kw:"45",type:"임대"},
+    {name:"고승우",kw:"50",type:"RPS"},
+    {name:"김순기",kw:"45",amount:"6750만",type:"현금"},
+    {name:"권미온",kw:"40",type:"임대"},
+    {name:"박해을",kw:"30",type:"임대"},
+    {name:"자유관",kw:"65",type:"임대"}
+  ].map(x=>Object.assign({stage:"계약",phone:"",addr:"",rep:"",source:"",special:"",amount:x.amount||"",note:x.note||""},x));
+  return [...dbList,...contracts].map(x=>Object.assign({id:uid(),created_at:now(),updated_at:now()},x));
+}
+
+/* ---------- init ---------- */
+function init(){
+  loadCloudCfg(); loadLocal(); updateCloudDot();
+  if(!localStorage.getItem(LS_KEY)){ state.data=seed(); saveLocal(); }
+  if(cloud.on){ cloudPull().then(render).catch(()=>{}); }
+  render();
+}
+init();
+</script>
+</body>
+</html>
