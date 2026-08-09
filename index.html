@@ -184,7 +184,7 @@
 <div class="modal-bg" id="cloudBg">
   <div class="modal">
     <h3>☁ 클라우드 동기화 (Supabase)</h3>
-    <p class="hint">PC와 폰에서 <b>같은 데이터</b>를 보려면 여기에 Supabase 정보를 입력하세요. 텔레그램 봇 때 만든 그 Supabase를 그대로 쓰면 됩니다. 테이블 이름은 <code>consultations</code>.</p>
+    <p class="hint">PC와 폰에서 <b>같은 데이터</b>를 보려면 여기에 Supabase 정보를 입력하세요. 봇이 쓰던 Supabase 프로젝트를 재사용해도, 이 앱은 <b>봇과 분리된 전용 테이블</b> <code>sangdam_db</code> 만 사용합니다 (봇 데이터와 안 섞임).</p>
     <div class="fgrid" style="margin-top:10px">
       <div class="field full"><label>Supabase URL</label><input id="c_url" placeholder="https://xxxx.supabase.co"/></div>
       <div class="field full"><label>API Key (anon 권장)</label><input id="c_key" placeholder="eyJ..."/></div>
@@ -220,7 +220,7 @@ function saveCloudCfg(){ localStorage.setItem(LS_CLOUD, JSON.stringify(cloud)); 
 function sbHeaders(){ return {apikey:cloud.key,Authorization:"Bearer "+cloud.key,"Content-Type":"application/json"}; }
 async function cloudPull(){
   if(!cloud.on) return;
-  const r=await fetch(`${cloud.url}/rest/v1/consultations?select=*&order=updated_at.desc`,{headers:sbHeaders()});
+  const r=await fetch(`${cloud.url}/rest/v1/sangdam_db?select=*&order=updated_at.desc`,{headers:sbHeaders()});
   if(!r.ok) throw new Error("pull "+r.status);
   const rows=await r.json();
   // merge by remote id -> map to local records
@@ -238,16 +238,16 @@ async function cloudPush(rec){
   const body=toRemote(rec);
   try{
     if(rec.remote_id){
-      await fetch(`${cloud.url}/rest/v1/consultations?id=eq.${rec.remote_id}`,{method:"PATCH",headers:sbHeaders(),body:JSON.stringify(body)});
+      await fetch(`${cloud.url}/rest/v1/sangdam_db?id=eq.${rec.remote_id}`,{method:"PATCH",headers:sbHeaders(),body:JSON.stringify(body)});
     }else{
-      const r=await fetch(`${cloud.url}/rest/v1/consultations`,{method:"POST",headers:Object.assign(sbHeaders(),{Prefer:"return=representation"}),body:JSON.stringify(body)});
+      const r=await fetch(`${cloud.url}/rest/v1/sangdam_db`,{method:"POST",headers:Object.assign(sbHeaders(),{Prefer:"return=representation"}),body:JSON.stringify(body)});
       if(r.ok){ const j=await r.json(); if(j&&j[0]&&j[0].id){ rec.remote_id=j[0].id; saveLocal(); } }
     }
   }catch(e){ console.warn("push fail",e); }
 }
 async function cloudDelete(rec){
   if(!cloud.on||!rec.remote_id) return;
-  try{ await fetch(`${cloud.url}/rest/v1/consultations?id=eq.${rec.remote_id}`,{method:"DELETE",headers:sbHeaders()}); }catch(e){}
+  try{ await fetch(`${cloud.url}/rest/v1/sangdam_db?id=eq.${rec.remote_id}`,{method:"DELETE",headers:sbHeaders()}); }catch(e){}
 }
 const REMOTE_FIELDS=["name","phone","addr","area","kw","type","amount","stage","rep","source","note","special","followup","created_at","updated_at"];
 function toRemote(r){ const o={}; REMOTE_FIELDS.forEach(f=>{ let k=f==="addr"?"addr":f; o[f]=r[mapLocal(f)]||null; }); return o; }
