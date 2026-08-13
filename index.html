@@ -36,7 +36,11 @@
   .cloud-dot{width:8px;height:8px;border-radius:50%;background:var(--danger);display:inline-block;margin-right:5px;vertical-align:middle}
   .cloud-dot.on{background:var(--ok);box-shadow:0 0 6px var(--ok)}
   /* stat strip */
-  .statstrip{display:flex;gap:8px;margin:11px 0 10px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .catswitch{display:flex;gap:6px;margin:10px 0 2px;background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:4px}
+  .cat{flex:1;text-align:center;padding:9px;border-radius:9px;font-weight:800;cursor:pointer;color:var(--muted);font-size:14.5px}
+  .cat.active[data-cat="사업용"]{background:var(--accent2);color:#fff}
+  .cat.active[data-cat="가정용"]{background:#2f8f5b;color:#fff}
+  .statstrip{display:flex;gap:8px;margin:9px 0 10px;overflow-x:auto;-webkit-overflow-scrolling:touch}
   .st{flex:1;min-width:82px;background:linear-gradient(180deg,var(--panel),var(--bg2));border:1px solid var(--line);
     border-radius:12px;padding:9px 12px}
   .st .n{font-size:19px;font-weight:800;letter-spacing:-.3px}
@@ -132,6 +136,10 @@
       <button class="btn sm ghost" id="btnMenu">⋯</button>
     </div>
   </div>
+  <div class="catswitch" id="catswitch">
+    <div class="cat active" data-cat="사업용">🏢 사업용</div>
+    <div class="cat" data-cat="가정용">🏠 가정용 (3~9kW)</div>
+  </div>
   <div class="statstrip" id="stats"></div>
   <div class="tabs">
     <div class="tab active" data-view="db">📋 상담DB</div>
@@ -166,6 +174,9 @@
   <div class="modal">
     <h3 id="editTitle">상담 추가</h3>
     <div class="fgrid">
+      <div class="field"><label>구분</label>
+        <select id="f_category"><option>사업용</option><option>가정용</option></select>
+      </div>
       <div class="field"><label>이름</label><input id="f_name"/></div>
       <div class="field"><label>연락처</label><input id="f_phone" inputmode="numeric"/></div>
       <div class="field"><label>진행단계</label>
@@ -237,7 +248,7 @@ const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const now=()=>new Date().toISOString();
 const today=()=>new Date().toISOString().slice(0,10);
 
-let state={ view:"db", data:[], editingId:null, stageFilter:"" };
+let state={ view:"db", data:[], editingId:null, stageFilter:"", category:"사업용" };
 let cloud={ url:"", key:"", on:false };
 
 /* storage */
@@ -281,18 +292,19 @@ async function cloudDelete(rec){
   if(!cloud.on||!rec.remote_id) return;
   try{ await fetch(`${cloud.url}/rest/v1/sangdam_db?id=eq.${rec.remote_id}`,{method:"DELETE",headers:sbHeaders()}); }catch(e){}
 }
-const REMOTE_FIELDS=["name","phone","addr","area","kw","type","amount","stage","rep","source","note","special","followup","created_at","updated_at"];
+const REMOTE_FIELDS=["name","phone","addr","area","kw","type","amount","stage","rep","source","note","special","followup","category","created_at","updated_at"];
 function toRemote(r){ const o={}; REMOTE_FIELDS.forEach(f=>{ o[f]=r[f]||null; }); return o; }
 function fromRemote(row){
   const o={}; REMOTE_FIELDS.forEach(f=>o[f]=row[f]||"");
   if(!o.stage) o.stage="상담예정";
+  if(!o.category) o.category="사업용";
   if(!o.created_at) o.created_at=now(); if(!o.updated_at) o.updated_at=now();
   return o;
 }
 
 /* quick parse */
 function parseQuick(text){
-  const rec={name:"",phone:"",kw:"",type:"",amount:"",stage:"",addr:"",source:"",area:"",special:"",note:""};
+  const rec={name:"",phone:"",kw:"",type:"",amount:"",stage:"",addr:"",source:"",area:"",special:"",note:"",category:""};
   let t=" "+text.trim()+" ";
   const ph=t.match(/01[016789][\s\-]?\d{3,4}[\s\-]?\d{4}/);
   if(ph){ rec.phone=ph[0].replace(/\s/g,""); t=t.replace(ph[0]," "); }
@@ -314,12 +326,14 @@ function parseQuick(text){
   const nm=t.trim().match(/[가-힣]{2,4}(?:님|소장)?/);
   if(nm){ rec.name=nm[0]; t=t.replace(nm[0]," "); }
   const rest=t.replace(/\s+/g," ").trim(); if(rest) rec.note=rest;
+  if(/가정용|주택|단독주택|자가/.test(t)){ rec.category="가정용"; }
+  if(!rec.category && rec.kw){ const n=parseFloat(rec.kw); if(n>0&&n<=10) rec.category="가정용"; }
   if(!rec.stage) rec.stage = ["임대","RPS","현금"].includes(rec.type) ? "계약" : "상담예정";
   return rec;
 }
 
 /* CRUD */
-function addRecord(rec){ const r=Object.assign({id:uid(),created_at:now(),updated_at:now(),stage:"상담예정"},rec); state.data.unshift(r); saveLocal(); cloudPush(r); return r; }
+function addRecord(rec){ const r=Object.assign({id:uid(),created_at:now(),updated_at:now(),stage:"상담예정"},rec); if(!r.category) r.category=state.category; state.data.unshift(r); saveLocal(); cloudPush(r); return r; }
 function updateRecord(id,patch){ const r=state.data.find(x=>x.id===id); if(!r)return; Object.assign(r,patch,{updated_at:now()}); saveLocal(); cloudPush(r); }
 function deleteRecord(id){ const i=state.data.findIndex(x=>x.id===id); if(i<0)return; const r=state.data[i]; state.data.splice(i,1); saveLocal(); cloudDelete(r); }
 
@@ -330,8 +344,9 @@ function esc(s){ return (s==null?"":String(s)).replace(/[&<>"]/g,m=>({"&":"&amp;
 function extractCdate(note){ const m=(note||"").match(/계약일\s*(\d{4}-\d{2}-\d{2})/); return m?m[1]:""; }
 
 /* render */
+function inCat(r){ return (r.category||"사업용")===state.category; }
 function currentList(){
-  let arr=state.data.slice();
+  let arr=state.data.filter(inCat);
   if(state.view==="contract") arr=arr.filter(r=>r.stage==="계약");
   if(state.stageFilter) arr=arr.filter(r=>r.stage===state.stageFilter);
   const q=$("#search").value.trim();
@@ -345,7 +360,7 @@ function currentList(){
   return arr;
 }
 function renderStats(){
-  const d=state.data, contracts=d.filter(r=>r.stage==="계약");
+  const d=state.data.filter(inCat), contracts=d.filter(r=>r.stage==="계약");
   const total=contracts.reduce((s,r)=>s+amtToMan(r.amount),0);
   const cards = state.view==="contract"
     ? [["계약 건수",contracts.length+"건",""],["계약금액",fmtMan(total),"gold"],["임대",contracts.filter(r=>r.type==="임대").length+"건",""],["RPS",contracts.filter(r=>r.type==="RPS").length+"건",""],["현금",contracts.filter(r=>r.type==="현금").length+"건",""]]
@@ -353,7 +368,7 @@ function renderStats(){
   $("#stats").innerHTML=cards.map(c=>`<div class="st"><div class="n ${c[2]}">${c[1]}</div><div class="l">${c[0]}</div></div>`).join("");
 }
 function renderChips(){
-  const d=state.data;
+  const d=state.data.filter(inCat);
   const base = state.view==="contract" ? d.filter(r=>r.stage==="계약") : d;
   const counts={};STAGES.forEach(s=>counts[s]=d.filter(r=>r.stage===s).length);
   let chips=[["","전체",base.length]];
@@ -363,7 +378,7 @@ function renderChips(){
 }
 function renderAlert(){
   const t=today();
-  const due=state.data.filter(r=>r.followup && r.followup<=t && r.stage!=="종료")
+  const due=state.data.filter(r=>inCat(r) && r.followup && r.followup<=t && r.stage!=="종료")
     .sort((a,b)=>(a.followup||"").localeCompare(b.followup||""));
   const box=$("#alertbox");
   if(!due.length){ box.style.display="none"; return; }
@@ -410,16 +425,16 @@ function render(){ renderStats(); renderChips(); renderAlert(); renderList(); }
 /* modal */
 function openEdit(id){
   state.editingId=id;
-  const r=id?state.data.find(x=>x.id===id):{stage:"상담예정"};
+  const r=id?state.data.find(x=>x.id===id):{stage:"상담예정",category:state.category};
   $("#editTitle").textContent=id?"상담 수정":"상담 추가";
   $("#btnDelete").style.display=id?"block":"none";
-  ["name","phone","stage","source","kw","type","amount","area","addr","rep","followup","special","note"].forEach(f=>{ const el=$("#f_"+f); if(el) el.value=r[f]||""; });
+  ["category","name","phone","stage","source","kw","type","amount","area","addr","rep","followup","special","note"].forEach(f=>{ const el=$("#f_"+f); if(el) el.value=r[f]||""; });
   $("#editBg").classList.add("show");
 }
 function closeEdit(){ $("#editBg").classList.remove("show"); state.editingId=null; }
 function saveEdit(){
   const patch={};
-  ["name","phone","stage","source","kw","type","amount","area","addr","rep","followup","special","note"].forEach(f=>{ patch[f]=$("#f_"+f).value.trim(); });
+  ["category","name","phone","stage","source","kw","type","amount","area","addr","rep","followup","special","note"].forEach(f=>{ patch[f]=$("#f_"+f).value.trim(); });
   if(state.editingId) updateRecord(state.editingId,patch); else addRecord(patch);
   closeEdit(); render(); toast("저장됨");
 }
@@ -431,10 +446,14 @@ document.querySelectorAll(".tab").forEach(tab=>tab.addEventListener("click",()=>
   document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
   tab.classList.add("active"); state.view=tab.dataset.view; state.stageFilter=""; render();
 }));
+document.querySelectorAll(".cat").forEach(c=>c.addEventListener("click",()=>{
+  document.querySelectorAll(".cat").forEach(x=>x.classList.remove("active"));
+  c.classList.add("active"); state.category=c.dataset.cat; state.stageFilter=""; render();
+}));
 $("#chips").addEventListener("click",e=>{ const c=e.target.closest("[data-stage]"); if(!c)return; state.stageFilter=c.dataset.stage; render(); });
 $("#quickAdd").addEventListener("click",()=>{
   const v=$("#quickInput").value.trim(); if(!v)return;
-  const rec=parseQuick(v); addRecord(rec); $("#quickInput").value=""; render(); toast(`추가: ${rec.name||"이름없음"} ${rec.stage}`);
+  const rec=parseQuick(v); const r=addRecord(rec); $("#quickInput").value=""; if(r.category!==state.category){ state.category=r.category; document.querySelectorAll(".cat").forEach(x=>x.classList.toggle("active",x.dataset.cat===r.category)); } render(); toast(`추가: ${rec.name||"이름없음"} · ${r.category} ${rec.stage}`);
 });
 $("#quickInput").addEventListener("keydown",e=>{ if(e.key==="Enter") $("#quickAdd").click(); });
 ["input","change"].forEach(ev=>{ ["#search","#sort"].forEach(s=>$(s).addEventListener(ev,render)); });
@@ -456,7 +475,7 @@ $("#mSync").addEventListener("click",async()=>{ if(!cloud.on){toast("동기화 �
 $("#mExport").addEventListener("click",()=>{ const blob=new Blob([JSON.stringify(state.data,null,2)],{type:"application/json"}); const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="상담DB_백업_"+today()+".json"; a.click(); toast("백업 저장됨"); });
 $("#mImport").addEventListener("click",()=>$("#fileImport").click());
 $("#fileImport").addEventListener("change",e=>{ const f=e.target.files[0]; if(!f)return; const rd=new FileReader(); rd.onload=()=>{ try{ const arr=JSON.parse(rd.result); if(!Array.isArray(arr))throw 0; const ids=new Set(state.data.map(x=>x.id)); let n=0; arr.forEach(x=>{ if(!x.id||!ids.has(x.id)){ x.id=x.id||uid(); state.data.push(x); n++; } }); saveLocal(); render(); toast(n+"건 병합됨"); }catch(err){ toast("불러오기 실패"); } }; rd.readAsText(f); e.target.value=""; });
-$("#mCsv").addEventListener("click",()=>{ const cols=["name","phone","stage","source","kw","type","amount","area","addr","special","note","followup"]; const head=["이름","연락처","단계","누구디비","용량kW","유형","계약금액","평수","주소","특이사항","메모","다음연락일"]; const rows=state.data.map(r=>cols.map(c=>`"${(""+(r[c]||"")).replace(/"/g,'""')}"`).join(",")); const csv="﻿"+head.join(",")+"\n"+rows.join("\n"); const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"})); a.download="상담DB_"+today()+".csv"; a.click(); toast("CSV 저장됨"); });
+$("#mCsv").addEventListener("click",()=>{ const cols=["category","name","phone","stage","source","kw","type","amount","area","addr","special","note","followup"]; const head=["구분","이름","연락처","단계","누구디비","용량kW","유형","계약금액","평수","주소","특이사항","메모","다음연락일"]; const rows=state.data.map(r=>cols.map(c=>`"${(""+(r[c]||"")).replace(/"/g,'""')}"`).join(",")); const csv="﻿"+head.join(",")+"\n"+rows.join("\n"); const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"})); a.download="상담DB_"+today()+".csv"; a.click(); toast("CSV 저장됨"); });
 $("#mReset").addEventListener("click",()=>{ if(confirm("이 기기 화면 목록을 비웁니다. (클라우드 데이터는 남아있고, 다시 동기화하면 내려받습니다) 진행할까요?")){ state.data=[]; saveLocal(); render(); toast("비웠습니다. 동기화하면 내려받습니다"); } });
 
 /* cloud */
