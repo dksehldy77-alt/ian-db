@@ -342,6 +342,19 @@ function amtToMan(s){ if(!s)return 0; let m=0; const e=(""+s).match(/(\d+(?:\.\d
 function fmtMan(n){ if(!n)return "0"; if(n>=10000){ const e=n/10000; return (Number.isInteger(e)?e:e.toFixed(1))+"억"; } return n.toLocaleString()+"만"; }
 function esc(s){ return (s==null?"":String(s)).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m])); }
 function extractCdate(note){ const m=(note||"").match(/계약일\s*(\d{4}-\d{2}-\d{2})/); return m?m[1]:""; }
+function gcalUrl(r){
+  const d=(r.followup||"").replace(/-/g,""); if(d.length!==8) return "";
+  const start=d+"T090000", end=d+"T093000";
+  const det=[r.phone?"📞 "+r.phone:"", r.addr?"📍 "+r.addr:"", r.source?"누구디비: "+r.source:"", r.note?"메모: "+r.note:"", "— 이안 상담DB"].filter(Boolean).join("\n");
+  const u=new URL("https://calendar.google.com/calendar/render");
+  u.searchParams.set("action","TEMPLATE");
+  u.searchParams.set("text","📞 "+(r.name||"상담")+" 연락");
+  u.searchParams.set("dates",start+"/"+end);
+  u.searchParams.set("ctz","Asia/Seoul");
+  u.searchParams.set("details",det);
+  if(r.addr) u.searchParams.set("location",r.addr);
+  return u.toString();
+}
 
 /* render */
 function inCat(r){ return (r.category||"사업용")===state.category; }
@@ -406,6 +419,7 @@ function renderList(){
         <span class="name">${esc(r.name||"(이름없음)")}</span>
         ${r.phone?`<a class="phone" href="tel:${esc(r.phone)}">${esc(r.phone)}</a>`:""}
         <span style="flex:1"></span>
+        ${r.followup?`<span class="cdate" style="color:var(--warn)">⏰${esc(r.followup)}</span>`:""}
         ${cdate?`<span class="cdate">📅${esc(cdate)}</span>`:""}
         <span class="badge b-${esc(r.stage)}">${esc(r.stage)}</span>
       </div>
@@ -416,6 +430,7 @@ function renderList(){
       <div class="row-actions">
         <button class="btn sm" data-edit="${r.id}">수정</button>
         ${isC?`<button class="btn sm" data-stage="${r.id}">단계변경</button>`:`<button class="btn sm" data-contract="${r.id}">계약전환</button>`}
+        ${r.followup?`<button class="btn sm" data-alarm="${r.id}" style="color:var(--gold)">📅 알람등록</button>`:""}
       </div>
     </div>`;
   }).join("");
@@ -459,6 +474,7 @@ $("#quickInput").addEventListener("keydown",e=>{ if(e.key==="Enter") $("#quickAd
 ["input","change"].forEach(ev=>{ ["#search","#sort"].forEach(s=>$(s).addEventListener(ev,render)); });
 $("#list").addEventListener("click",e=>{
   const ed=e.target.closest("[data-edit]"); if(ed){ openEdit(ed.dataset.edit); return; }
+  const al=e.target.closest("[data-alarm]"); if(al){ const r=state.data.find(x=>x.id===al.dataset.alarm); const url=gcalUrl(r); if(url){ window.open(url,"_blank"); toast("캘린더 열림 → 저장 누르면 알림 예약"); } else toast("다음연락일을 먼저 넣어주세요"); return; }
   const ct=e.target.closest("[data-contract]"); if(ct){ updateRecord(ct.dataset.contract,{stage:"계약"}); render(); toast("계약으로 전환"); return; }
   const st=e.target.closest("[data-stage]"); if(st){ const r=state.data.find(x=>x.id===st.dataset.stage); const i=STAGES.indexOf(r.stage); updateRecord(st.dataset.stage,{stage:STAGES[(i+1)%STAGES.length]}); render(); toast("단계: "+state.data.find(x=>x.id===st.dataset.stage).stage); return; }
 });
