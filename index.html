@@ -104,6 +104,7 @@
   .special{margin-top:8px;font-size:13px;color:#ffd0a8;background:#2a1e12;border-radius:9px;padding:7px 10px}
   .note{margin-top:7px;font-size:13px;color:#cfdbf0;background:#0e1a30;border-radius:9px;padding:8px 10px;white-space:pre-wrap}
   .row-actions{display:flex;gap:7px;margin-top:10px}
+  .meta{font-size:11.5px;color:var(--dim);margin-top:9px;display:flex;gap:10px;flex-wrap:wrap}
   .empty{text-align:center;color:var(--muted);padding:44px 10px}
   /* modal */
   .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.66);display:none;align-items:flex-end;justify-content:center;z-index:50}
@@ -342,6 +343,8 @@ function amtToMan(s){ if(!s)return 0; let m=0; const e=(""+s).match(/(\d+(?:\.\d
 function fmtMan(n){ if(!n)return "0"; if(n>=10000){ const e=n/10000; return (Number.isInteger(e)?e:e.toFixed(1))+"억"; } return n.toLocaleString()+"만"; }
 function esc(s){ return (s==null?"":String(s)).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m])); }
 function extractCdate(note){ const m=(note||"").match(/계약일\s*(\d{4}-\d{2}-\d{2})/); return m?m[1]:""; }
+function fmtDay(s){ if(!s) return "-"; const d=new Date(s); if(isNaN(d)) return String(s).slice(0,10); const p=n=>String(n).padStart(2,"0"); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`; }
+function fmtDayTime(s){ if(!s) return "-"; const d=new Date(s); if(isNaN(d)) return String(s).slice(0,10); const p=n=>String(n).padStart(2,"0"); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`; }
 function gcalUrl(r){
   const d=(r.followup||"").replace(/-/g,""); if(d.length!==8) return "";
   const start=d+"T090000", end=d+"T093000";
@@ -427,6 +430,7 @@ function renderList(){
       <div class="tags">${kw}${type}${area}${who}${amt}</div>
       ${r.special?`<div class="special">⚑ ${esc(r.special)}</div>`:""}
       ${r.note?`<div class="note">${esc(r.note)}</div>`:""}
+      <div class="meta"><span>🗓 등록 ${fmtDay(r.created_at)}</span><span>✏️ 수정 ${fmtDayTime(r.updated_at)}</span></div>
       <div class="row-actions">
         <button class="btn sm" data-edit="${r.id}">수정</button>
         ${isC?`<button class="btn sm" data-stage="${r.id}">단계변경</button>`:`<button class="btn sm" data-contract="${r.id}">계약전환</button>`}
