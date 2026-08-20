@@ -72,7 +72,7 @@
     color:var(--muted);font-weight:700;font-size:13px;cursor:pointer}
   .chip .c{opacity:.7;margin-left:4px;font-weight:800}
   .chip.active{background:#13233f;border-color:var(--accent);color:var(--accent)}
-  .toolbar{display:flex;gap:8px;margin-bottom:12px}
+  .toolbar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
   .toolbar input.search{flex:1;background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:10px 13px;color:var(--txt);font-size:14px}
   select{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:10px;color:var(--txt);font-size:14px}
   /* list */
@@ -98,6 +98,7 @@
   .tag.임대{background:#0e3040;color:#7fd6ff}
   .tag.현금{background:#123320;color:#87e6a6}
   .tag.who{background:#241a3a;color:#c3aef5}
+  .tag.company{background:#0d2f2a;color:#6fe6c8;font-weight:800}
   .tag.area{background:#2a2620;color:#e6c99a}
   .amt{font-weight:800;color:var(--gold);font-size:15px;margin-left:auto}
   .cdate{font-size:12px;color:var(--ok);font-weight:700}
@@ -165,6 +166,7 @@
       <option value="name">이름순</option>
       <option value="amount">금액순</option>
     </select>
+    <select id="companyFilter" style="flex:1;min-width:130px"><option value="">🏢 전체 회사</option></select>
   </div>
 
   <div class="list" id="list"></div>
@@ -184,6 +186,7 @@
         <select id="f_stage"><option>상담예정</option><option>1차상담</option><option>2차상담</option><option>계약</option><option>종료</option></select>
       </div>
       <div class="field"><label>누구디비</label><input id="f_source" placeholder="자체 민경민 / 협력 / 조재현"/></div>
+      <div class="field"><label>계약회사</label><input id="f_company" placeholder="예: OO에너지 / OO발전"/></div>
       <div class="field"><label>용량(kW)</label><input id="f_kw" inputmode="decimal"/></div>
       <div class="field"><label>유형</label>
         <select id="f_type"><option value="">-</option><option>임대</option><option>RPS</option><option>현금</option></select>
@@ -293,7 +296,7 @@ async function cloudDelete(rec){
   if(!cloud.on||!rec.remote_id) return;
   try{ await fetch(`${cloud.url}/rest/v1/sangdam_db?id=eq.${rec.remote_id}`,{method:"DELETE",headers:sbHeaders()}); }catch(e){}
 }
-const REMOTE_FIELDS=["name","phone","addr","area","kw","type","amount","stage","rep","source","note","special","followup","category","created_at","updated_at"];
+const REMOTE_FIELDS=["name","phone","addr","area","kw","type","amount","stage","rep","source","company","note","special","followup","category","created_at","updated_at"];
 function toRemote(r){ const o={}; REMOTE_FIELDS.forEach(f=>{ o[f]=r[f]||null; }); return o; }
 function fromRemote(row){
   const o={}; REMOTE_FIELDS.forEach(f=>o[f]=row[f]||"");
@@ -365,8 +368,10 @@ function currentList(){
   let arr=state.data.filter(inCat);
   if(state.view==="contract") arr=arr.filter(r=>r.stage==="계약");
   if(state.stageFilter) arr=arr.filter(r=>r.stage===state.stageFilter);
+  const comp=$("#companyFilter").value;
+  if(comp) arr=arr.filter(r=>r.company===comp);
   const q=$("#search").value.trim();
-  if(q){ const k=q.toLowerCase(); arr=arr.filter(r=>[r.name,r.phone,r.addr,r.note,r.source,r.special,r.rep,r.area].join(" ").toLowerCase().includes(k)); }
+  if(q){ const k=q.toLowerCase(); arr=arr.filter(r=>[r.name,r.phone,r.addr,r.note,r.source,r.company,r.special,r.rep,r.area].join(" ").toLowerCase().includes(k)); }
   const sort=$("#sort").value;
   arr.sort((a,b)=>{
     if(sort==="name") return (a.name||"").localeCompare(b.name||"","ko");
@@ -414,6 +419,7 @@ function renderList(){
     const kw=r.kw?`<span class="tag kw">${esc(r.kw)}kW</span>`:"";
     const type=r.type?`<span class="tag ${r.type==='RPS'?'rps':r.type}">${esc(r.type)}</span>`:"";
     const who=r.source?`<span class="tag who">${esc(r.source)}</span>`:"";
+    const comp=r.company?`<span class="tag company">🏢 ${esc(r.company)}</span>`:"";
     const area=r.area?`<span class="tag area">${esc(r.area)}</span>`:"";
     const amt=r.amount?`<span class="amt">${esc(r.amount)}</span>`:"";
     const cdate=extractCdate(r.note);
@@ -427,7 +433,7 @@ function renderList(){
         <span class="badge b-${esc(r.stage)}">${esc(r.stage)}</span>
       </div>
       ${r.addr?`<div class="addr"><span class="pin">📍</span><span>${esc(r.addr)}</span></div>`:""}
-      <div class="tags">${kw}${type}${area}${who}${amt}</div>
+      <div class="tags">${comp}${kw}${type}${area}${who}${amt}</div>
       ${r.special?`<div class="special">⚑ ${esc(r.special)}</div>`:""}
       ${r.note?`<div class="note">${esc(r.note)}</div>`:""}
       <div class="meta"><span>🗓 등록 ${fmtDay(r.created_at)}</span><span>✏️ 수정 ${fmtDayTime(r.updated_at)}</span></div>
@@ -439,7 +445,12 @@ function renderList(){
     </div>`;
   }).join("");
 }
-function render(){ renderStats(); renderChips(); renderAlert(); renderList(); }
+function renderCompanyFilter(){
+  const sel=$("#companyFilter"); if(!sel) return; const cur=sel.value;
+  const comps=[...new Set(state.data.filter(inCat).map(r=>r.company).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"ko"));
+  sel.innerHTML='<option value="">🏢 전체 회사</option>'+comps.map(c=>`<option${c===cur?" selected":""}>${esc(c)}</option>`).join("");
+}
+function render(){ renderStats(); renderChips(); renderCompanyFilter(); renderAlert(); renderList(); }
 
 /* modal */
 function openEdit(id){
@@ -447,13 +458,13 @@ function openEdit(id){
   const r=id?state.data.find(x=>x.id===id):{stage:"상담예정",category:state.category};
   $("#editTitle").textContent=id?"상담 수정":"상담 추가";
   $("#btnDelete").style.display=id?"block":"none";
-  ["category","name","phone","stage","source","kw","type","amount","area","addr","rep","followup","special","note"].forEach(f=>{ const el=$("#f_"+f); if(el) el.value=r[f]||""; });
+  ["category","name","phone","stage","source","company","kw","type","amount","area","addr","rep","followup","special","note"].forEach(f=>{ const el=$("#f_"+f); if(el) el.value=r[f]||""; });
   $("#editBg").classList.add("show");
 }
 function closeEdit(){ $("#editBg").classList.remove("show"); state.editingId=null; }
 function saveEdit(){
   const patch={};
-  ["category","name","phone","stage","source","kw","type","amount","area","addr","rep","followup","special","note"].forEach(f=>{ patch[f]=$("#f_"+f).value.trim(); });
+  ["category","name","phone","stage","source","company","kw","type","amount","area","addr","rep","followup","special","note"].forEach(f=>{ patch[f]=$("#f_"+f).value.trim(); });
   if(state.editingId) updateRecord(state.editingId,patch); else addRecord(patch);
   closeEdit(); render(); toast("저장됨");
 }
@@ -475,7 +486,7 @@ $("#quickAdd").addEventListener("click",()=>{
   const rec=parseQuick(v); const r=addRecord(rec); $("#quickInput").value=""; if(r.category!==state.category){ state.category=r.category; document.querySelectorAll(".cat").forEach(x=>x.classList.toggle("active",x.dataset.cat===r.category)); } render(); toast(`추가: ${rec.name||"이름없음"} · ${r.category} ${rec.stage}`);
 });
 $("#quickInput").addEventListener("keydown",e=>{ if(e.key==="Enter") $("#quickAdd").click(); });
-["input","change"].forEach(ev=>{ ["#search","#sort"].forEach(s=>$(s).addEventListener(ev,render)); });
+["input","change"].forEach(ev=>{ ["#search","#sort","#companyFilter"].forEach(s=>$(s).addEventListener(ev,render)); });
 $("#list").addEventListener("click",e=>{
   const ed=e.target.closest("[data-edit]"); if(ed){ openEdit(ed.dataset.edit); return; }
   const al=e.target.closest("[data-alarm]"); if(al){ const r=state.data.find(x=>x.id===al.dataset.alarm); const url=gcalUrl(r); if(url){ window.open(url,"_blank"); toast("캘린더 열림 → 저장 누르면 알림 예약"); } else toast("다음연락일을 먼저 넣어주세요"); return; }
@@ -495,7 +506,7 @@ $("#mSync").addEventListener("click",async()=>{ if(!cloud.on){toast("동기화 �
 $("#mExport").addEventListener("click",()=>{ const blob=new Blob([JSON.stringify(state.data,null,2)],{type:"application/json"}); const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="상담DB_백업_"+today()+".json"; a.click(); toast("백업 저장됨"); });
 $("#mImport").addEventListener("click",()=>$("#fileImport").click());
 $("#fileImport").addEventListener("change",e=>{ const f=e.target.files[0]; if(!f)return; const rd=new FileReader(); rd.onload=()=>{ try{ const arr=JSON.parse(rd.result); if(!Array.isArray(arr))throw 0; const ids=new Set(state.data.map(x=>x.id)); let n=0; arr.forEach(x=>{ if(!x.id||!ids.has(x.id)){ x.id=x.id||uid(); state.data.push(x); n++; } }); saveLocal(); render(); toast(n+"건 병합됨"); }catch(err){ toast("불러오기 실패"); } }; rd.readAsText(f); e.target.value=""; });
-$("#mCsv").addEventListener("click",()=>{ const cols=["category","name","phone","stage","source","kw","type","amount","area","addr","special","note","followup"]; const head=["구분","이름","연락처","단계","누구디비","용량kW","유형","계약금액","평수","주소","특이사항","메모","다음연락일"]; const rows=state.data.map(r=>cols.map(c=>`"${(""+(r[c]||"")).replace(/"/g,'""')}"`).join(",")); const csv="﻿"+head.join(",")+"\n"+rows.join("\n"); const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"})); a.download="상담DB_"+today()+".csv"; a.click(); toast("CSV 저장됨"); });
+$("#mCsv").addEventListener("click",()=>{ const cols=["category","name","phone","stage","source","company","kw","type","amount","area","addr","special","note","followup"]; const head=["구분","이름","연락처","단계","누구디비","계약회사","용량kW","유형","계약금액","평수","주소","특이사항","메모","다음연락일"]; const rows=state.data.map(r=>cols.map(c=>`"${(""+(r[c]||"")).replace(/"/g,'""')}"`).join(",")); const csv="﻿"+head.join(",")+"\n"+rows.join("\n"); const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"})); a.download="상담DB_"+today()+".csv"; a.click(); toast("CSV 저장됨"); });
 $("#mReset").addEventListener("click",()=>{ if(confirm("이 기기 화면 목록을 비웁니다. (클라우드 데이터는 남아있고, 다시 동기화하면 내려받습니다) 진행할까요?")){ state.data=[]; saveLocal(); render(); toast("비웠습니다. 동기화하면 내려받습니다"); } });
 
 /* cloud */
