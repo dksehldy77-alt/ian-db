@@ -312,17 +312,18 @@ async function cloudDelete(rec){
 const REMOTE_FIELDS=["name","phone","addr","area","kw","type","amount","stage","rep","source","company","note","special","followup","category","created_at","updated_at"];
 function toRemote(r){ const o={}; REMOTE_FIELDS.forEach(f=>{ o[f]=r[f]||null; }); o.files=Array.isArray(r.files)?r.files:[]; return o; }
 async function sbUpload(file){
-  const safe=file.name.replace(/\s+/g,"_").replace(/[^\w.\-가-힣]/g,"");
-  const path=uid()+"_"+safe;
-  const r=await fetch(`${cloud.url}/storage/v1/object/docs/${encodeURIComponent(path)}`,{
+  // Supabase 저장경로는 한글/특수문자 불가 → 영문키(uid+확장자)로 저장, 표시는 원래 이름 유지
+  const ext=(file.name.match(/\.[A-Za-z0-9]{1,10}$/)||[""])[0].toLowerCase();
+  const path=uid()+ext;
+  const r=await fetch(`${cloud.url}/storage/v1/object/docs/${path}`,{
     method:"POST",
     headers:{apikey:cloud.key,Authorization:"Bearer "+cloud.key,"Content-Type":file.type||"application/octet-stream","x-upsert":"true"},
     body:file
   });
   if(!r.ok) throw new Error("업로드 실패("+r.status+")");
-  return {name:file.name, path, url:`${cloud.url}/storage/v1/object/public/docs/${encodeURIComponent(path)}`, at:now()};
+  return {name:file.name, path, url:`${cloud.url}/storage/v1/object/public/docs/${path}`, at:now()};
 }
-async function sbDeleteFile(path){ try{ await fetch(`${cloud.url}/storage/v1/object/docs/${encodeURIComponent(path)}`,{method:"DELETE",headers:{apikey:cloud.key,Authorization:"Bearer "+cloud.key}}); }catch(e){} }
+async function sbDeleteFile(path){ try{ await fetch(`${cloud.url}/storage/v1/object/docs/${path}`,{method:"DELETE",headers:{apikey:cloud.key,Authorization:"Bearer "+cloud.key}}); }catch(e){} }
 function fromRemote(row){
   const o={}; REMOTE_FIELDS.forEach(f=>o[f]=row[f]||"");
   o.files=Array.isArray(row.files)?row.files:[];
