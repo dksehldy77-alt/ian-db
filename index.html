@@ -106,6 +106,12 @@
   .note{margin-top:7px;font-size:13px;color:#cfdbf0;background:#0e1a30;border-radius:9px;padding:8px 10px;white-space:pre-wrap}
   .row-actions{display:flex;gap:7px;margin-top:10px}
   .meta{font-size:11.5px;color:var(--dim);margin-top:9px;display:flex;gap:10px;flex-wrap:wrap}
+  .filerow{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+  .filechip{font-size:12.5px;font-weight:700;padding:5px 10px;border-radius:8px;background:#1a2c22;color:#8fe6b8;text-decoration:none;border:1px solid #2a5a44}
+  .filelist{display:flex;flex-direction:column;gap:6px;margin-bottom:8px}
+  .fileitem{display:flex;align-items:center;gap:8px;background:var(--bg2);border:1px solid var(--line);border-radius:9px;padding:8px 10px;font-size:13px}
+  .fileitem a{color:var(--accent);text-decoration:none;font-weight:600;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .fileitem .del{color:var(--danger);cursor:pointer;font-weight:800;padding:2px 6px}
   .empty{text-align:center;color:var(--muted);padding:44px 10px}
   /* modal */
   .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.66);display:none;align-items:flex-end;justify-content:center;z-index:50}
@@ -198,6 +204,13 @@
       <div class="field"><label>다음연락일</label><input id="f_followup" type="date"/></div>
       <div class="field full"><label>특이사항</label><input id="f_special"/></div>
       <div class="field full"><label>메모 (비고)</label><textarea id="f_note"></textarea></div>
+      <div class="field full">
+        <label>📎 첨부파일 (제안서·계약서 등)</label>
+        <div id="fileList" class="filelist"></div>
+        <input type="file" id="fileInput" style="display:none" accept="application/pdf,image/*,.doc,.docx,.hwp,.xlsx"/>
+        <button type="button" class="btn sm" id="fileAddBtn">＋ 파일 올리기</button>
+        <span class="hint" id="fileHint"></span>
+      </div>
     </div>
     <div class="modal-actions">
       <button class="btn danger" id="btnDelete" style="flex:0 0 auto">삭제</button>
@@ -252,7 +265,7 @@ const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const now=()=>new Date().toISOString();
 const today=()=>new Date().toISOString().slice(0,10);
 
-let state={ view:"db", data:[], editingId:null, stageFilter:"", category:"사업용" };
+let state={ view:"db", data:[], editingId:null, stageFilter:"", category:"사업용", editFiles:[] };
 let cloud={ url:"", key:"", on:false };
 
 /* storage */
@@ -297,9 +310,22 @@ async function cloudDelete(rec){
   try{ await fetch(`${cloud.url}/rest/v1/sangdam_db?id=eq.${rec.remote_id}`,{method:"DELETE",headers:sbHeaders()}); }catch(e){}
 }
 const REMOTE_FIELDS=["name","phone","addr","area","kw","type","amount","stage","rep","source","company","note","special","followup","category","created_at","updated_at"];
-function toRemote(r){ const o={}; REMOTE_FIELDS.forEach(f=>{ o[f]=r[f]||null; }); return o; }
+function toRemote(r){ const o={}; REMOTE_FIELDS.forEach(f=>{ o[f]=r[f]||null; }); o.files=Array.isArray(r.files)?r.files:[]; return o; }
+async function sbUpload(file){
+  const safe=file.name.replace(/\s+/g,"_").replace(/[^\w.\-가-힣]/g,"");
+  const path=uid()+"_"+safe;
+  const r=await fetch(`${cloud.url}/storage/v1/object/docs/${encodeURIComponent(path)}`,{
+    method:"POST",
+    headers:{apikey:cloud.key,Authorization:"Bearer "+cloud.key,"Content-Type":file.type||"application/octet-stream","x-upsert":"true"},
+    body:file
+  });
+  if(!r.ok) throw new Error("업로드 실패("+r.status+")");
+  return {name:file.name, path, url:`${cloud.url}/storage/v1/object/public/docs/${encodeURIComponent(path)}`, at:now()};
+}
+async function sbDeleteFile(path){ try{ await fetch(`${cloud.url}/storage/v1/object/docs/${encodeURIComponent(path)}`,{method:"DELETE",headers:{apikey:cloud.key,Authorization:"Bearer "+cloud.key}}); }catch(e){} }
 function fromRemote(row){
   const o={}; REMOTE_FIELDS.forEach(f=>o[f]=row[f]||"");
+  o.files=Array.isArray(row.files)?row.files:[];
   if(!o.stage) o.stage="상담예정";
   if(!o.category) o.category="사업용";
   if(!o.created_at) o.created_at=now(); if(!o.updated_at) o.updated_at=now();
@@ -436,6 +462,7 @@ function renderList(){
       <div class="tags">${comp}${kw}${type}${area}${who}${amt}</div>
       ${r.special?`<div class="special">⚑ ${esc(r.special)}</div>`:""}
       ${r.note?`<div class="note">${esc(r.note)}</div>`:""}
+      ${(r.files&&r.files.length)?`<div class="filerow">${r.files.map(f=>`<a class="filechip" href="${esc(f.url)}" target="_blank" rel="noopener">📎 ${esc(f.name)}</a>`).join("")}</div>`:""}
       <div class="meta"><span>🗓 등록 ${fmtDay(r.created_at)}</span><span>✏️ 수정 ${fmtDayTime(r.updated_at)}</span></div>
       <div class="row-actions">
         <button class="btn sm" data-edit="${r.id}">수정</button>
@@ -459,12 +486,20 @@ function openEdit(id){
   $("#editTitle").textContent=id?"상담 수정":"상담 추가";
   $("#btnDelete").style.display=id?"block":"none";
   ["category","name","phone","stage","source","company","kw","type","amount","area","addr","rep","followup","special","note"].forEach(f=>{ const el=$("#f_"+f); if(el) el.value=r[f]||""; });
+  state.editFiles=(r.files&&Array.isArray(r.files))?r.files.slice():[];
+  renderEditFiles();
   $("#editBg").classList.add("show");
+}
+function renderEditFiles(){
+  const fh=$("#fileHint"); if(fh) fh.textContent="";
+  const box=$("#fileList");
+  box.innerHTML=state.editFiles.map((f,i)=>`<div class="fileitem"><a href="${esc(f.url)}" target="_blank" rel="noopener">📎 ${esc(f.name)}</a><span class="del" data-fi="${i}">삭제</span></div>`).join("");
 }
 function closeEdit(){ $("#editBg").classList.remove("show"); state.editingId=null; }
 function saveEdit(){
   const patch={};
   ["category","name","phone","stage","source","company","kw","type","amount","area","addr","rep","followup","special","note"].forEach(f=>{ patch[f]=$("#f_"+f).value.trim(); });
+  patch.files=state.editFiles.slice();
   if(state.editingId) updateRecord(state.editingId,patch); else addRecord(patch);
   closeEdit(); render(); toast("저장됨");
 }
@@ -497,6 +532,15 @@ $("#btnSave").addEventListener("click",saveEdit);
 $("#btnCancel").addEventListener("click",closeEdit);
 $("#btnDelete").addEventListener("click",()=>{ if(state.editingId&&confirm("이 상담을 삭제할까요?")){ deleteRecord(state.editingId); closeEdit(); render(); toast("삭제됨"); } });
 $("#editBg").addEventListener("click",e=>{ if(e.target===$("#editBg")) closeEdit(); });
+$("#fileAddBtn").addEventListener("click",()=>{ if(!cloud.on){ toast("동기화 연결 후 업로드 가능"); return; } $("#fileInput").click(); });
+$("#fileInput").addEventListener("change",async e=>{
+  const f=e.target.files[0]; e.target.value=""; if(!f) return;
+  if(f.size>45*1024*1024){ toast("45MB 이하만 가능해요"); return; }
+  $("#fileHint").textContent="⏳ 업로드 중… "+f.name;
+  try{ const meta=await sbUpload(f); state.editFiles.push(meta); renderEditFiles(); $("#fileHint").textContent="✓ 올림: "+f.name+" (저장 눌러야 반영)"; }
+  catch(err){ $("#fileHint").textContent="❌ "+err.message; }
+});
+$("#fileList").addEventListener("click",e=>{ const d=e.target.closest("[data-fi]"); if(!d) return; const i=+d.dataset.fi; const f=state.editFiles[i]; if(confirm("이 파일을 삭제할까요?\n"+f.name)){ if(f.path) sbDeleteFile(f.path); state.editFiles.splice(i,1); renderEditFiles(); } });
 
 /* menu */
 $("#btnMenu").addEventListener("click",()=>$("#menuBg").classList.add("show"));
